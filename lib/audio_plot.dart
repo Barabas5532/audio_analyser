@@ -3,6 +3,7 @@ library audio_plot;
 import 'dart:ui';
 
 import 'package:collection/collection.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'dart:math' as m;
@@ -55,21 +56,44 @@ class _AudioPlotState extends State<AudioPlot> {
         child: SizedBox(
           height: 500,
           width: 700,
-          child: ClipRect(
-            child: CustomPaint(
-              painter: _AudioPlotPainter(
-                xAxis: xAxis,
-                yAxis: yAxis,
-                xPoints: [1, 2, 3],
-                yPoints: [5, 1, 3],
-                tickTextStyle: Theme
-                    .of(context)
-                    .textTheme
-                    .labelMedium!,
-                labelTextStyle: Theme
-                    .of(context)
-                    .textTheme
-                    .bodyMedium!,
+          child: Listener(
+            onPointerSignal: (pointerSignal) {
+              switch(pointerSignal) {
+                case PointerScrollEvent scrollEvent:
+                  _log.info('scroll: ${scrollEvent.localPosition}');
+                  const width = 700;
+                  final a = xAxis.minimum;
+                  final b = xAxis.maximum;
+                  final r = (scrollEvent.localPosition.dx / width);
+                  final f = a + (b - a) * r;
+
+                  final delta = scrollEvent.scrollDelta.dy.abs();
+                  final factor = m.log(delta) / 3.5;
+                  final ratio = scrollEvent.scrollDelta.dy > 0 ? factor : 1 / factor;
+
+                  final a_prime = f - r * (b - a) / ratio;
+                  final b_prime = a_prime + (b - a) / ratio;
+                  setState(() {
+                    xAxis = xAxis.copyWith(minimum: a_prime, maximum: b_prime);
+                  });
+              }
+            },
+            child: ClipRect(
+              child: CustomPaint(
+                painter: _AudioPlotPainter(
+                  xAxis: xAxis,
+                  yAxis: yAxis,
+                  xPoints: [1, 2, 3],
+                  yPoints: [5, 1, 3],
+                  tickTextStyle: Theme
+                      .of(context)
+                      .textTheme
+                      .labelMedium!,
+                  labelTextStyle: Theme
+                      .of(context)
+                      .textTheme
+                      .bodyMedium!,
+                ),
               ),
             ),
           ),
