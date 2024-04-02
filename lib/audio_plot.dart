@@ -3,34 +3,76 @@ library audio_plot;
 import 'dart:ui';
 
 import 'package:collection/collection.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'dart:math' as m;
 
-class AudioPlot extends StatelessWidget {
+import 'package:logging/logging.dart';
+
+part 'audio_plot.freezed.dart';
+
+final _log = Logger('audio_plot');
+
+class AudioPlot extends StatefulWidget {
   const AudioPlot({super.key});
 
   @override
+  State<AudioPlot> createState() => _AudioPlotState();
+}
+
+class _AudioPlotState extends State<AudioPlot> {
+  AxisParameters xAxis = AxisParameters(
+    label: "X Axis",
+    minimum: 0,
+    maximum: 5,
+    ticks: [0, 1, 2, 3, 4, 5],
+  );
+
+  AxisParameters yAxis = AxisParameters(
+    label: "Y Axis",
+    minimum: 1,
+    maximum: 6,
+    ticks: [1, 2, 3, 4, 5, 6],
+  );
+
+  @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 500,
-      width: 700,
-      child: CustomPaint(
-        painter: _AudioPlotPainter(
-          xAxis: _AxisParameters(
-            minimum: 0,
-            maximum: 5,
-            ticks: [0, 1, 2, 3, 4, 5],
+    return MouseRegion(
+      // TODO swap to grabbing when mouse down
+      cursor: SystemMouseCursors.grab,
+      child: GestureDetector(
+        onPanUpdate: (data) {
+          const width = 700;
+          const height = 500;
+
+          final delta = Offset(data.delta.dx / width * xAxis.range, data.delta.dy / height * yAxis.range);
+
+          setState(() {
+            xAxis = xAxis.copyWith(minimum: xAxis.minimum - delta.dx, maximum: xAxis.maximum - delta.dx);
+            yAxis = yAxis.copyWith(minimum: yAxis.minimum + delta.dy, maximum: yAxis.maximum + delta.dy);
+          });
+        },
+        child: SizedBox(
+          height: 500,
+          width: 700,
+          child: ClipRect(
+            child: CustomPaint(
+              painter: _AudioPlotPainter(
+                xAxis: xAxis,
+                yAxis: yAxis,
+                xPoints: [1, 2, 3],
+                yPoints: [5, 1, 3],
+                tickTextStyle: Theme
+                    .of(context)
+                    .textTheme
+                    .labelMedium!,
+                labelTextStyle: Theme
+                    .of(context)
+                    .textTheme
+                    .bodyMedium!,
+              ),
+            ),
           ),
-          yAxis: _AxisParameters(
-            minimum: 1,
-            maximum: 6,
-            ticks: [1, 2, 3, 4, 5, 6],
-          ),
-          xPoints: [1, 2, 3],
-          yPoints: [5, 1, 3],
-          tickTextStyle: Theme.of(context).textTheme.labelMedium!,
-          labelTextStyle: Theme.of(context).textTheme.bodyMedium!,
         ),
       ),
     );
@@ -39,7 +81,6 @@ class AudioPlot extends StatelessWidget {
 
 class _AudioPlotPainter extends CustomPainter {
   _AudioPlotPainter({
-    super.repaint,
     required this.xAxis,
     required this.yAxis,
     required this.xPoints,
@@ -48,8 +89,8 @@ class _AudioPlotPainter extends CustomPainter {
     required this.labelTextStyle,
   });
 
-  final _AxisParameters xAxis;
-  final _AxisParameters yAxis;
+  final AxisParameters xAxis;
+  final AxisParameters yAxis;
 
   final Iterable<double> xPoints;
   final Iterable<double> yPoints;
@@ -76,11 +117,11 @@ class _AudioPlotPainter extends CustomPainter {
       ..close();
     canvas.drawPath(framePath, framePaint);
 
-    final yLabel = "Y Axis";
-    final xLabel = "X Axis";
+    final xLabel = xAxis.label;
+    final yLabel = yAxis.label;
 
-    final ySpan = TextSpan(text: yLabel, style: labelTextStyle);
     final xSpan = TextSpan(text: xLabel, style: labelTextStyle);
+    final ySpan = TextSpan(text: yLabel, style: labelTextStyle);
 
     final textPainter = TextPainter(
       textDirection: TextDirection.ltr,
@@ -107,21 +148,21 @@ class _AudioPlotPainter extends CustomPainter {
       ..color = Colors.blue
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
-    final linePath = Path()..moveTo(xPoints.first, yPoints.first);
+    final linePath = Path();
 
     final xMinOffset = lineArea.left;
     final xMaxOffset = lineArea.right;
     final yMinOffset = lineArea.bottom;
     final yMaxOffset = lineArea.top;
     bool first = true;
-    for(final point in IterableZip([xPoints, yPoints])) {
+    for (final point in IterableZip([xPoints, yPoints])) {
       final x = (point[0] - xAxis.minimum) / xAxis.range;
       final y = (point[1] - yAxis.minimum) / yAxis.range;
 
       final xOffset = lerpDouble(xMinOffset, xMaxOffset, x)!;
       final yOffset = lerpDouble(yMinOffset, yMaxOffset, y)!;
 
-      if(first) {
+      if (first) {
         linePath.moveTo(xOffset, yOffset);
         first = false;
       } else {
@@ -137,13 +178,16 @@ class _AudioPlotPainter extends CustomPainter {
   }
 }
 
-class _AxisParameters {
-  final double minimum;
-  final double maximum;
-  final Iterable<double> ticks;
+@freezed
+class AxisParameters with _$AxisParameters{
+  factory AxisParameters({
+    required double minimum,
+    required double maximum,
+    required Iterable<double> ticks,
+    required String label,
+  }) = _AxisParameters;
 
-  _AxisParameters(
-      {required this.minimum, required this.maximum, required this.ticks});
+  AxisParameters._();
 
   get range => maximum - minimum;
 }
