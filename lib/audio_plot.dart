@@ -38,62 +38,117 @@ class _AudioPlotState extends State<AudioPlot> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      // TODO swap to grabbing when mouse down
-      cursor: SystemMouseCursors.grab,
-      child: GestureDetector(
-        onPanUpdate: (data) {
-          const width = 700;
-          const height = 500;
+    return SizedBox(
+      height: 500,
+      width: 700,
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _YAxis(
+                axis: yAxis,
+                updateAxis: (min, max) => setState(
+                    () => yAxis = yAxis.copyWith(minimum: min, maximum: max)),
+              ),
+              AudioPlotLineArea(
+                xAxis: xAxis,
+                yAxis: yAxis,
+                updateXAxis: (min, max) => setState(
+                    () => xAxis = xAxis.copyWith(minimum: min, maximum: max)),
+                updateYAxis: (min, max) => setState(
+                    () => yAxis = yAxis.copyWith(minimum: min, maximum: max)),
+              ),
+            ],
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              _XAxis(
+                axis: xAxis,
+                updateAxis: (min, max) => setState(
+                    () => xAxis = xAxis.copyWith(minimum: min, maximum: max)),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-          final delta = Offset(data.delta.dx / width * xAxis.range, data.delta.dy / height * yAxis.range);
+class AudioPlotLineArea extends StatelessWidget {
+  AudioPlotLineArea({
+    required this.xAxis,
+    required this.yAxis,
+    required this.updateXAxis,
+    required this.updateYAxis,
+  });
 
-          setState(() {
-            xAxis = xAxis.copyWith(minimum: xAxis.minimum - delta.dx, maximum: xAxis.maximum - delta.dx);
-            yAxis = yAxis.copyWith(minimum: yAxis.minimum + delta.dy, maximum: yAxis.maximum + delta.dy);
-          });
-        },
-        child: SizedBox(
-          height: 500,
-          width: 700,
-          child: Listener(
-            onPointerSignal: (pointerSignal) {
-              switch(pointerSignal) {
-                case PointerScrollEvent scrollEvent:
-                  _log.info('scroll: ${scrollEvent.localPosition}');
-                  const width = 700;
-                  final a = xAxis.minimum;
-                  final b = xAxis.maximum;
-                  final r = (scrollEvent.localPosition.dx / width);
+  final AxisParameters xAxis;
+  final AxisParameters yAxis;
+
+  final void Function(double min, double max) updateXAxis;
+  final void Function(double min, double max) updateYAxis;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onPanUpdate: (data) {
+        const width = 700;
+        const height = 500;
+
+        final delta = Offset(data.delta.dx / width * xAxis.range,
+            data.delta.dy / height * yAxis.range);
+
+        updateXAxis(xAxis.minimum - delta.dx, xAxis.maximum - delta.dx);
+        updateYAxis(yAxis.minimum + delta.dy, yAxis.maximum + delta.dy);
+      },
+      child: SizedBox(
+        width: 680,
+        height: 480,
+        child: Listener(
+          onPointerSignal: (pointerSignal) {
+            switch (pointerSignal) {
+              case PointerScrollEvent scrollEvent:
+                const width = 680;
+                const height = 480;
+
+                var a = xAxis.minimum;
+                var b = xAxis.maximum;
+                var r = (scrollEvent.localPosition.dx / width);
+
+                final delta = scrollEvent.scrollDelta.dy;
+                final factor = m.log(delta.abs()) / 3;
+                final ratio = delta < 0 ? factor : 1 / factor;
+
+                {
                   final f = a + (b - a) * r;
+                  final aPrime = f - r * (b - a) / ratio;
+                  final bPrime = aPrime + (b - a) / ratio;
+                  updateXAxis(aPrime, bPrime);
+                }
 
-                  final delta = scrollEvent.scrollDelta.dy.abs();
-                  final factor = m.log(delta) / 3.5;
-                  final ratio = scrollEvent.scrollDelta.dy > 0 ? factor : 1 / factor;
+                a = yAxis.maximum;
+                b = yAxis.minimum;
+                r = (scrollEvent.localPosition.dy / height);
 
-                  final a_prime = f - r * (b - a) / ratio;
-                  final b_prime = a_prime + (b - a) / ratio;
-                  setState(() {
-                    xAxis = xAxis.copyWith(minimum: a_prime, maximum: b_prime);
-                  });
-              }
-            },
-            child: ClipRect(
-              child: CustomPaint(
-                painter: _AudioPlotPainter(
-                  xAxis: xAxis,
-                  yAxis: yAxis,
-                  xPoints: [1, 2, 3],
-                  yPoints: [5, 1, 3],
-                  tickTextStyle: Theme
-                      .of(context)
-                      .textTheme
-                      .labelMedium!,
-                  labelTextStyle: Theme
-                      .of(context)
-                      .textTheme
-                      .bodyMedium!,
-                ),
+                {
+                  final f = a + (b - a) * r;
+                  final aPrime = f - r * (b - a) / ratio;
+                  final bPrime = aPrime + (b - a) / ratio;
+                  updateYAxis(bPrime, aPrime);
+                }
+            }
+          },
+          child: ClipRect(
+            child: CustomPaint(
+              painter: _AudioPlotPainter(
+                xAxis: xAxis,
+                yAxis: yAxis,
+                xPoints: [1, 2, 3],
+                yPoints: [5, 1, 3],
+                tickTextStyle: Theme.of(context).textTheme.labelMedium!,
+                labelTextStyle: Theme.of(context).textTheme.bodyMedium!,
               ),
             ),
           ),
@@ -122,52 +177,22 @@ class _AudioPlotPainter extends CustomPainter {
   final TextStyle tickTextStyle;
   final TextStyle labelTextStyle;
 
-  static const axisArea = 30.0;
-
   @override
   void paint(Canvas canvas, Size size) {
-    final lineArea = Rect.fromPoints(
-      size.topLeft(const Offset(3 * axisArea, 0)),
-      size.bottomRight(const Offset(0, -2 * axisArea)),
-    );
-
+    final lineArea = Rect.fromCenter(
+        center: size.center(Offset.zero),
+        width: size.width,
+        height: size.height);
     final framePaint = Paint()
       ..color = Colors.black
-      ..strokeWidth = 2
+      ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 
     final framePath = Path()
-      ..addRect(lineArea)
+      ..addRect(lineArea.deflate(1))
       ..close();
     canvas.drawPath(framePath, framePaint);
 
-    final xLabel = xAxis.label;
-    final yLabel = yAxis.label;
-
-    final xSpan = TextSpan(text: xLabel, style: labelTextStyle);
-    final ySpan = TextSpan(text: yLabel, style: labelTextStyle);
-
-    final textPainter = TextPainter(
-      textDirection: TextDirection.ltr,
-      textAlign: TextAlign.center,
-    );
-
-    textPainter.text = xSpan;
-    textPainter.layout();
-    final xLabelOffset = Offset(size.width / 2, size.height - axisArea);
-    final textCentreOffset = textPainter.size.center(Offset.zero);
-    textPainter.paint(canvas, xLabelOffset - textCentreOffset);
-
-    canvas.save();
-    textPainter.text = ySpan;
-    final yLabelOffset = Offset(axisArea, size.height / 2);
-    canvas.translate(yLabelOffset.dx, yLabelOffset.dy);
-    canvas.rotate(-m.pi / 2);
-    textPainter.layout();
-    textPainter.paint(canvas, -textPainter.size.center(Offset.zero));
-    canvas.restore();
-
-    // TODO remove off screen points and do not draw them
     final linePaint = Paint()
       ..color = Colors.blue
       ..strokeWidth = 1
@@ -202,8 +227,98 @@ class _AudioPlotPainter extends CustomPainter {
   }
 }
 
+class _YAxis extends StatelessWidget {
+  const _YAxis({required this.axis, required this.updateAxis});
+
+  final AxisParameters axis;
+  final void Function(double min, double max) updateAxis;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      // TODO swap to grabbing when mouse down
+      cursor: SystemMouseCursors.grab,
+      child: GestureDetector(
+        onVerticalDragUpdate: (data) {
+          const width = 680;
+          final delta = data.delta.dy / width * axis.range;
+          updateAxis(axis.minimum + delta, axis.maximum + delta);
+        },
+        behavior: HitTestBehavior.translucent,
+        child: Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerSignal: (pointerSignal) {
+            switch (pointerSignal) {
+              case PointerScrollEvent scrollEvent:
+                const height = 480;
+                final a = axis.maximum;
+                final b = axis.minimum;
+                final r = (scrollEvent.localPosition.dy / height);
+
+                final delta = scrollEvent.scrollDelta.dy;
+                final factor = m.log(delta.abs()) / 3;
+                final ratio = delta < 0 ? factor : 1 / factor;
+
+                final f = a + (b - a) * r;
+                final aPrime = f - r * (b - a) / ratio;
+                final bPrime = aPrime + (b - a) / ratio;
+                updateAxis(bPrime, aPrime);
+            }
+          },
+          child: const SizedBox(width: 20, height: 480),
+        ),
+      ),
+    );
+  }
+}
+
+class _XAxis extends StatelessWidget {
+  const _XAxis({required this.axis, required this.updateAxis});
+
+  final AxisParameters axis;
+  final void Function(double min, double max) updateAxis;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      // TODO swap to grabbing when mouse down
+      cursor: SystemMouseCursors.grab,
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onHorizontalDragUpdate: (data) {
+          const width = 680;
+          final delta = data.delta.dx / width * axis.range;
+          updateAxis(axis.minimum - delta, axis.maximum - delta);
+        },
+        child: Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerSignal: (pointerSignal) {
+            switch (pointerSignal) {
+              case PointerScrollEvent scrollEvent:
+                const width = 680;
+                final a = axis.minimum;
+                final b = axis.maximum;
+                final r = (scrollEvent.localPosition.dx / width);
+
+                final delta = scrollEvent.scrollDelta.dy;
+                final factor = m.log(delta.abs()) / 3;
+                final ratio = delta < 0 ? factor : 1 / factor;
+
+                final f = a + (b - a) * r;
+                final aPrime = f - r * (b - a) / ratio;
+                final bPrime = aPrime + (b - a) / ratio;
+                updateAxis(aPrime, bPrime);
+            }
+          },
+          child: const SizedBox(width: 680, height: 20),
+        ),
+      ),
+    );
+  }
+}
+
 @freezed
-class AxisParameters with _$AxisParameters{
+class AxisParameters with _$AxisParameters {
   factory AxisParameters({
     required double minimum,
     required double maximum,
