@@ -47,53 +47,21 @@ class _AudioPlotState extends State<AudioPlot> {
             children: [
               _YAxis(
                 axis: yAxis,
-                updateAxis: (min, max) => setState(
-                    () => yAxis = yAxis.copyWith(minimum: min, maximum: max)),
+                translateAxis: translateYAxis,
+                zoomAxis: zoomYAxis,
               ),
               _AudioPlotLineArea(
                 xAxis: xAxis,
                 yAxis: yAxis,
                 translateAxes: (delta) {
-                  setState(() {
-                    xAxis = xAxis.copyWith(
-                        minimum: xAxis.minimum - delta.dx,
-                        maximum: xAxis.maximum - delta.dx);
-                    yAxis = yAxis.copyWith(
-                        minimum: yAxis.minimum + delta.dy,
-                        maximum: yAxis.maximum + delta.dy);
-                  });
-                },
-                zoomXAxis: (double delta, double r) {
-                  final factor = m.log(delta.abs()) / 3;
-                  final ratio = delta < 0 ? factor : 1 / factor;
+                  final dx = delta.dx;
+                  final dy = delta.dy;
 
-                  var a = xAxis.minimum;
-                  var b = xAxis.maximum;
-                  {
-                    final f = a + (b - a) * r;
-                    final aPrime = f - r * (b - a) / ratio;
-                    final bPrime = aPrime + (b - a) / ratio;
-                    setState(() {
-                      xAxis = xAxis.copyWith(minimum: aPrime, maximum: bPrime);
-                    });
-                  }
+                  translateXAxis(dx);
+                  translateYAxis(dy);
                 },
-                zoomYAxis: (delta, r) {
-                  final factor = m.log(delta.abs()) / 3;
-                  final ratio = delta < 0 ? factor : 1 / factor;
-
-                  final a = yAxis.maximum;
-                  final b = yAxis.minimum;
-
-                  {
-                    final f = a + (b - a) * r;
-                    final aPrime = f - r * (b - a) / ratio;
-                    final bPrime = aPrime + (b - a) / ratio;
-                    setState(() {
-                      yAxis = yAxis.copyWith(minimum: bPrime, maximum: aPrime);
-                    });
-                  }
-                },
+                zoomXAxis: zoomXAxis,
+                zoomYAxis: zoomYAxis,
               ),
             ],
           ),
@@ -102,14 +70,61 @@ class _AudioPlotState extends State<AudioPlot> {
             children: [
               _XAxis(
                 axis: xAxis,
-                updateAxis: (min, max) => setState(
-                    () => xAxis = xAxis.copyWith(minimum: min, maximum: max)),
+                translateAxis: translateXAxis,
+                zoomAxis: zoomXAxis,
               ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  void translateYAxis(double dy) {
+    setState(() {
+      yAxis = yAxis.copyWith(
+          minimum: yAxis.minimum + dy, maximum: yAxis.maximum + dy);
+    });
+  }
+
+  void translateXAxis(double dx) {
+    setState(() {
+      xAxis = xAxis.copyWith(
+          minimum: xAxis.minimum - dx, maximum: xAxis.maximum - dx);
+    });
+  }
+
+  void zoomYAxis(delta, r) {
+    final factor = m.log(delta.abs()) / 3;
+    final ratio = delta < 0 ? factor : 1 / factor;
+
+    final a = yAxis.maximum;
+    final b = yAxis.minimum;
+
+    {
+      final f = a + (b - a) * r;
+      final aPrime = f - r * (b - a) / ratio;
+      final bPrime = aPrime + (b - a) / ratio;
+      setState(() {
+        yAxis = yAxis.copyWith(minimum: bPrime, maximum: aPrime);
+      });
+    }
+  }
+
+  void zoomXAxis(double delta, double r) {
+    final factor = m.log(delta.abs()) / 3;
+    final ratio = delta < 0 ? factor : 1 / factor;
+
+    var a = xAxis.minimum;
+    var b = xAxis.maximum;
+    {
+      final f = a + (b - a) * r;
+      final aPrime = f - r * (b - a) / ratio;
+      final bPrime = aPrime + (b - a) / ratio;
+      setState(() {
+        xAxis = xAxis.copyWith(minimum: aPrime, maximum: bPrime);
+      });
+    }
   }
 }
 
@@ -251,10 +266,14 @@ class _AudioPlotPainter extends CustomPainter {
 }
 
 class _YAxis extends StatelessWidget {
-  const _YAxis({required this.axis, required this.updateAxis});
+  const _YAxis(
+      {required this.axis,
+      required this.translateAxis,
+      required this.zoomAxis});
 
   final AxisParameters axis;
-  final void Function(double min, double max) updateAxis;
+  final void Function(double offset) translateAxis;
+  final void Function(double delta, double r) zoomAxis;
 
   @override
   Widget build(BuildContext context) {
@@ -265,7 +284,7 @@ class _YAxis extends StatelessWidget {
         onVerticalDragUpdate: (data) {
           const width = 680;
           final delta = data.delta.dy / width * axis.range;
-          updateAxis(axis.minimum + delta, axis.maximum + delta);
+          translateAxis(delta);
         },
         behavior: HitTestBehavior.translucent,
         child: Listener(
@@ -274,18 +293,10 @@ class _YAxis extends StatelessWidget {
             switch (pointerSignal) {
               case PointerScrollEvent scrollEvent:
                 const height = 480;
-                final a = axis.maximum;
-                final b = axis.minimum;
                 final r = (scrollEvent.localPosition.dy / height);
 
                 final delta = scrollEvent.scrollDelta.dy;
-                final factor = m.log(delta.abs()) / 3;
-                final ratio = delta < 0 ? factor : 1 / factor;
-
-                final f = a + (b - a) * r;
-                final aPrime = f - r * (b - a) / ratio;
-                final bPrime = aPrime + (b - a) / ratio;
-                updateAxis(bPrime, aPrime);
+                zoomAxis(delta, r);
             }
           },
           child: const SizedBox(width: 20, height: 480),
@@ -296,10 +307,14 @@ class _YAxis extends StatelessWidget {
 }
 
 class _XAxis extends StatelessWidget {
-  const _XAxis({required this.axis, required this.updateAxis});
+  const _XAxis(
+      {required this.axis,
+      required this.translateAxis,
+      required this.zoomAxis});
 
   final AxisParameters axis;
-  final void Function(double min, double max) updateAxis;
+  final void Function(double offset) translateAxis;
+  final void Function(double delta, double r) zoomAxis;
 
   @override
   Widget build(BuildContext context) {
@@ -311,7 +326,7 @@ class _XAxis extends StatelessWidget {
         onHorizontalDragUpdate: (data) {
           const width = 680;
           final delta = data.delta.dx / width * axis.range;
-          updateAxis(axis.minimum - delta, axis.maximum - delta);
+          translateAxis(delta);
         },
         child: Listener(
           behavior: HitTestBehavior.translucent,
@@ -319,18 +334,9 @@ class _XAxis extends StatelessWidget {
             switch (pointerSignal) {
               case PointerScrollEvent scrollEvent:
                 const width = 680;
-                final a = axis.minimum;
-                final b = axis.maximum;
                 final r = (scrollEvent.localPosition.dx / width);
-
                 final delta = scrollEvent.scrollDelta.dy;
-                final factor = m.log(delta.abs()) / 3;
-                final ratio = delta < 0 ? factor : 1 / factor;
-
-                final f = a + (b - a) * r;
-                final aPrime = f - r * (b - a) / ratio;
-                final bPrime = aPrime + (b - a) / ratio;
-                updateAxis(aPrime, bPrime);
+                zoomAxis(delta, r);
             }
           },
           child: const SizedBox(width: 680, height: 20),
