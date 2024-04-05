@@ -50,13 +50,50 @@ class _AudioPlotState extends State<AudioPlot> {
                 updateAxis: (min, max) => setState(
                     () => yAxis = yAxis.copyWith(minimum: min, maximum: max)),
               ),
-              AudioPlotLineArea(
+              _AudioPlotLineArea(
                 xAxis: xAxis,
                 yAxis: yAxis,
-                updateXAxis: (min, max) => setState(
-                    () => xAxis = xAxis.copyWith(minimum: min, maximum: max)),
-                updateYAxis: (min, max) => setState(
-                    () => yAxis = yAxis.copyWith(minimum: min, maximum: max)),
+                translateAxes: (delta) {
+                  setState(() {
+                    xAxis = xAxis.copyWith(
+                        minimum: xAxis.minimum - delta.dx,
+                        maximum: xAxis.maximum - delta.dx);
+                    yAxis = yAxis.copyWith(
+                        minimum: yAxis.minimum + delta.dy,
+                        maximum: yAxis.maximum + delta.dy);
+                  });
+                },
+                zoomXAxis: (double delta, double r) {
+                  final factor = m.log(delta.abs()) / 3;
+                  final ratio = delta < 0 ? factor : 1 / factor;
+
+                  var a = xAxis.minimum;
+                  var b = xAxis.maximum;
+                  {
+                    final f = a + (b - a) * r;
+                    final aPrime = f - r * (b - a) / ratio;
+                    final bPrime = aPrime + (b - a) / ratio;
+                    setState(() {
+                      xAxis = xAxis.copyWith(minimum: aPrime, maximum: bPrime);
+                    });
+                  }
+                },
+                zoomYAxis: (delta, r) {
+                  final factor = m.log(delta.abs()) / 3;
+                  final ratio = delta < 0 ? factor : 1 / factor;
+
+                  final a = yAxis.maximum;
+                  final b = yAxis.minimum;
+
+                  {
+                    final f = a + (b - a) * r;
+                    final aPrime = f - r * (b - a) / ratio;
+                    final bPrime = aPrime + (b - a) / ratio;
+                    setState(() {
+                      yAxis = yAxis.copyWith(minimum: bPrime, maximum: aPrime);
+                    });
+                  }
+                },
               ),
             ],
           ),
@@ -76,32 +113,33 @@ class _AudioPlotState extends State<AudioPlot> {
   }
 }
 
-class AudioPlotLineArea extends StatelessWidget {
-  AudioPlotLineArea({
+class _AudioPlotLineArea extends StatelessWidget {
+  const _AudioPlotLineArea({
     required this.xAxis,
     required this.yAxis,
-    required this.updateXAxis,
-    required this.updateYAxis,
+    required this.translateAxes,
+    required this.zoomXAxis,
+    required this.zoomYAxis,
   });
 
   final AxisParameters xAxis;
   final AxisParameters yAxis;
 
-  final void Function(double min, double max) updateXAxis;
-  final void Function(double min, double max) updateYAxis;
+  final void Function(Offset offset) translateAxes;
+  final void Function(double scale, double about) zoomXAxis;
+  final void Function(double scale, double about) zoomYAxis;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onPanUpdate: (data) {
-        const width = 700;
-        const height = 500;
+        const width = 680;
+        const height = 480;
 
         final delta = Offset(data.delta.dx / width * xAxis.range,
             data.delta.dy / height * yAxis.range);
 
-        updateXAxis(xAxis.minimum - delta.dx, xAxis.maximum - delta.dx);
-        updateYAxis(yAxis.minimum + delta.dy, yAxis.maximum + delta.dy);
+        translateAxes(delta);
       },
       child: SizedBox(
         width: 680,
@@ -113,30 +151,15 @@ class AudioPlotLineArea extends StatelessWidget {
                 const width = 680;
                 const height = 480;
 
-                var a = xAxis.minimum;
-                var b = xAxis.maximum;
-                var r = (scrollEvent.localPosition.dx / width);
-
                 final delta = scrollEvent.scrollDelta.dy;
-                final factor = m.log(delta.abs()) / 3;
-                final ratio = delta < 0 ? factor : 1 / factor;
-
                 {
-                  final f = a + (b - a) * r;
-                  final aPrime = f - r * (b - a) / ratio;
-                  final bPrime = aPrime + (b - a) / ratio;
-                  updateXAxis(aPrime, bPrime);
+                  final r = (scrollEvent.localPosition.dx / width);
+                  zoomXAxis(delta, r);
                 }
 
-                a = yAxis.maximum;
-                b = yAxis.minimum;
-                r = (scrollEvent.localPosition.dy / height);
-
                 {
-                  final f = a + (b - a) * r;
-                  final aPrime = f - r * (b - a) / ratio;
-                  final bPrime = aPrime + (b - a) / ratio;
-                  updateYAxis(bPrime, aPrime);
+                  final r = (scrollEvent.localPosition.dy / height);
+                  zoomYAxis(delta, r);
                 }
             }
           },
