@@ -17,7 +17,8 @@ final _log = Logger('audio_plot');
 const _kWidth = 700.0;
 const _kHeight = 500.0;
 
-const _kAxisSize = 37.0;
+const _kXAxisSize = 39.0;
+const _kYAxisSize = 67.0;
 
 class AudioPlot extends StatefulWidget {
   const AudioPlot({super.key});
@@ -162,14 +163,14 @@ class _AudioPlotLineArea extends StatelessWidget {
         translateAxes(delta);
       },
       child: SizedBox(
-        width: _kWidth - _kAxisSize,
-        height: _kHeight - _kAxisSize,
+        width: _kWidth - _kYAxisSize,
+        height: _kHeight - _kXAxisSize,
         child: Listener(
           onPointerSignal: (pointerSignal) {
             switch (pointerSignal) {
               case PointerScrollEvent scrollEvent:
-                const width = _kWidth - _kAxisSize;
-                const height = _kHeight - _kAxisSize;
+                const width = _kWidth - _kYAxisSize;
+                const height = _kHeight - _kXAxisSize;
 
                 final delta = scrollEvent.scrollDelta.dy;
                 {
@@ -279,6 +280,7 @@ class _YAxis extends StatelessWidget {
   final AxisParameters axis;
   final void Function(double offset) translateAxis;
   final void Function(double delta, double r) zoomAxis;
+  static const height = _kHeight - _kXAxisSize;
 
   @override
   Widget build(BuildContext context) {
@@ -287,8 +289,7 @@ class _YAxis extends StatelessWidget {
       cursor: SystemMouseCursors.grab,
       child: GestureDetector(
         onVerticalDragUpdate: (data) {
-          const width = _kWidth - _kAxisSize;
-          final delta = data.delta.dy / width * axis.range;
+          final delta = data.delta.dy / height * axis.range;
           translateAxis(delta);
         },
         behavior: HitTestBehavior.translucent,
@@ -297,18 +298,46 @@ class _YAxis extends StatelessWidget {
           onPointerSignal: (pointerSignal) {
             switch (pointerSignal) {
               case PointerScrollEvent scrollEvent:
-                const height = _kHeight - _kAxisSize;
                 final r = (scrollEvent.localPosition.dy / height);
 
                 final delta = scrollEvent.scrollDelta.dy;
                 zoomAxis(delta, r);
             }
           },
-          child:
-              const SizedBox(width: _kAxisSize, height: _kHeight - _kAxisSize),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              for (final tick in axis.ticks)
+                Positioned(
+                  right: 7,
+                  top: _getPosition(tick),
+                  child: FractionalTranslation(
+                    translation: const Offset(0, -0.5),
+                    child: Text('$tick'),
+                  ),
+                ),
+              Positioned(
+                left: 0,
+                bottom: height / 2,
+                child: RotatedBox(
+                  quarterTurns: -1,
+                  child: FractionalTranslation(
+                    translation: const Offset(-0.5, 0),
+                    child: Text(axis.label),
+                  ),
+                ),
+              ),
+              const SizedBox(width: _kYAxisSize, height: height),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  double _getPosition(double tick) {
+    final r = (axis.maximum - tick) / axis.range;
+    return r * height;
   }
 }
 
@@ -321,7 +350,7 @@ class _XAxis extends StatelessWidget {
   final AxisParameters axis;
   final void Function(double offset) translateAxis;
   final void Function(double delta, double r) zoomAxis;
-  static const width = _kWidth - _kAxisSize;
+  static const width = _kWidth - _kYAxisSize;
 
   @override
   Widget build(BuildContext context) {
@@ -344,34 +373,32 @@ class _XAxis extends StatelessWidget {
                 zoomAxis(delta, r);
             }
           },
-          child: Stack(
-            clipBehavior: Clip.none,
-              children: [
+          child: Stack(clipBehavior: Clip.none, children: [
             for (final tick in axis.ticks)
               Positioned(
-                top: 0,
-                left: _getXPosition(tick),
+                top: 5,
+                left: _getPosition(tick),
                 child: FractionalTranslation(
-                  translation: Offset(-0.5, 0),
+                  translation: const Offset(-0.5, 0),
                   child: Text('$tick'),
                 ),
               ),
-                Positioned(
-                  bottom: 0,
-                  left: width/2,
-                  child: FractionalTranslation(
-                    translation: Offset(-0.5, 0),
-                    child: Text(axis.label),
-                  ),
-                ),
-            const SizedBox(width: _kWidth - _kAxisSize, height: _kAxisSize),
+            Positioned(
+              bottom: 0,
+              left: width / 2,
+              child: FractionalTranslation(
+                translation: const Offset(-0.5, 0),
+                child: Text(axis.label),
+              ),
+            ),
+            const SizedBox(width: _kWidth - _kYAxisSize, height: _kXAxisSize),
           ]),
         ),
       ),
     );
   }
 
-  double _getXPosition(double tick) {
+  double _getPosition(double tick) {
     final r = (tick - axis.minimum) / axis.range;
     return r * width;
   }
