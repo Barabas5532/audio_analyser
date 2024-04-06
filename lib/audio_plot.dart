@@ -223,37 +223,27 @@ class _AudioPlotPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final lineArea = Rect.fromCenter(
-        center: size.center(Offset.zero),
-        width: size.width,
-        height: size.height);
-    final framePaint = Paint()
-      ..color = Colors.black
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
+    paintLine(size, canvas);
+    paintFrame(canvas, size);
+  }
 
-    final framePath = Path()
-      ..addRect(lineArea.deflate(1))
-      ..close();
-    canvas.drawPath(framePath, framePaint);
-
+  void paintLine(Size size, Canvas canvas) {
     final linePaint = Paint()
       ..color = Colors.blue
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
     final linePath = Path();
 
-    final xMinOffset = lineArea.left;
-    final xMaxOffset = lineArea.right;
-    final yMinOffset = lineArea.bottom;
-    final yMaxOffset = lineArea.top;
     bool first = true;
-    for (final point in IterableZip([xPoints, yPoints])) {
-      final x = (point[0] - xAxis.minimum) / xAxis.range;
-      final y = (point[1] - yAxis.minimum) / yAxis.range;
+    final xRange = xAxis.range;
+    final yRange = yAxis.range;
 
-      final xOffset = lerpDouble(xMinOffset, xMaxOffset, x)!;
-      final yOffset = lerpDouble(yMinOffset, yMaxOffset, y)!;
+    for (final point in IterableZip([xPoints, yPoints])) {
+      final x = (point[0] - xAxis.minimum) / xRange;
+      final y = (yAxis.maximum - point[1]) / yRange;
+
+      final xOffset = size.width * x;
+      final yOffset = size.height * y;
 
       if (first) {
         linePath.moveTo(xOffset, yOffset);
@@ -263,6 +253,16 @@ class _AudioPlotPainter extends CustomPainter {
       }
     }
     canvas.drawPath(linePath, linePaint);
+  }
+
+  void paintFrame(Canvas canvas, Size size) {
+    final framePaint = Paint()
+      ..color = Colors.black
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height + 1).deflate(1),
+        framePaint);
   }
 
   @override
