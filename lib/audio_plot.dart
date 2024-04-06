@@ -32,14 +32,16 @@ class _AudioPlotState extends State<AudioPlot> {
     label: "X Axis",
     minimum: 0,
     maximum: 5,
-    ticks: [0, 1, 2, 3, 4, 5],
+    ticks: [0, 1, 2, 3, 4, 5]
+        .map((e) => TickLabel(value: e.toDouble(), label: e.toString())),
   );
 
   AxisParameters yAxis = AxisParameters(
     label: "Y Axis",
     minimum: 1,
     maximum: 6,
-    ticks: [1, 2, 3, 4, 5, 6],
+    ticks: [1, 2, 3, 4, 5, 6]
+        .map((e) => TickLabel(value: e.toDouble(), label: e.toString())),
   );
 
   @override
@@ -223,11 +225,31 @@ class _AudioPlotPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    paintLine(size, canvas);
+    paintGrid(canvas, size);
+    paintLine(canvas, size);
     paintFrame(canvas, size);
   }
 
-  void paintLine(Size size, Canvas canvas) {
+  void paintGrid(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.grey.shade300
+      ..strokeWidth = 0
+      ..style = PaintingStyle.stroke;
+
+    final xRange = xAxis.range;
+    for (final tick in xAxis.ticks) {
+      final x = (tick.value - xAxis.minimum) / xRange * size.width;
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+
+    final yRange = yAxis.range;
+    for (final tick in yAxis.ticks) {
+      final y = (yAxis.maximum - tick.value) / yRange * size.height;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  void paintLine(Canvas canvas, Size size) {
     final linePaint = Paint()
       ..color = Colors.blue
       ..strokeWidth = 1
@@ -310,10 +332,10 @@ class _YAxis extends StatelessWidget {
               for (final tick in axis.ticks)
                 Positioned(
                   right: 7,
-                  top: _getPosition(tick),
+                  top: _getPosition(tick.value),
                   child: FractionalTranslation(
                     translation: const Offset(0, -0.5),
-                    child: Text('$tick'),
+                    child: Text(tick.label),
                   ),
                 ),
               Positioned(
@@ -377,10 +399,10 @@ class _XAxis extends StatelessWidget {
             for (final tick in axis.ticks)
               Positioned(
                 top: 5,
-                left: _getPosition(tick),
+                left: _getPosition(tick.value),
                 child: FractionalTranslation(
                   translation: const Offset(-0.5, 0),
-                  child: Text('$tick'),
+                  child: Text(tick.label),
                 ),
               ),
             Positioned(
@@ -409,11 +431,19 @@ class AxisParameters with _$AxisParameters {
   factory AxisParameters({
     required double minimum,
     required double maximum,
-    required Iterable<double> ticks,
+    required Iterable<TickLabel> ticks,
     required String label,
   }) = _AxisParameters;
 
   AxisParameters._();
 
   double get range => maximum - minimum;
+}
+
+@freezed
+class TickLabel with _$TickLabel {
+  factory TickLabel({
+    required double value,
+    required String label,
+  }) = _TickLabel;
 }

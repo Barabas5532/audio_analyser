@@ -18,7 +18,7 @@ final _privateConstructorUsedError = UnsupportedError(
 mixin _$AxisParameters {
   double get minimum => throw _privateConstructorUsedError;
   double get maximum => throw _privateConstructorUsedError;
-  Iterable<double> get ticks => throw _privateConstructorUsedError;
+  Iterable<TickLabel> get ticks => throw _privateConstructorUsedError;
   String get label => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
@@ -33,7 +33,10 @@ abstract class $AxisParametersCopyWith<$Res> {
       _$AxisParametersCopyWithImpl<$Res, AxisParameters>;
   @useResult
   $Res call(
-      {double minimum, double maximum, Iterable<double> ticks, String label});
+      {double minimum,
+      double maximum,
+      Iterable<TickLabel> ticks,
+      String label});
 }
 
 /// @nodoc
@@ -66,7 +69,7 @@ class _$AxisParametersCopyWithImpl<$Res, $Val extends AxisParameters>
       ticks: null == ticks
           ? _value.ticks
           : ticks // ignore: cast_nullable_to_non_nullable
-              as Iterable<double>,
+              as Iterable<TickLabel>,
       label: null == label
           ? _value.label
           : label // ignore: cast_nullable_to_non_nullable
@@ -84,7 +87,10 @@ abstract class _$$AxisParametersImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {double minimum, double maximum, Iterable<double> ticks, String label});
+      {double minimum,
+      double maximum,
+      Iterable<TickLabel> ticks,
+      String label});
 }
 
 /// @nodoc
@@ -115,7 +121,7 @@ class __$$AxisParametersImplCopyWithImpl<$Res>
       ticks: null == ticks
           ? _value.ticks
           : ticks // ignore: cast_nullable_to_non_nullable
-              as Iterable<double>,
+              as Iterable<TickLabel>,
       label: null == label
           ? _value.label
           : label // ignore: cast_nullable_to_non_nullable
@@ -139,7 +145,7 @@ class _$AxisParametersImpl extends _AxisParameters {
   @override
   final double maximum;
   @override
-  final Iterable<double> ticks;
+  final Iterable<TickLabel> ticks;
   @override
   final String label;
 
@@ -175,7 +181,7 @@ abstract class _AxisParameters extends AxisParameters {
   factory _AxisParameters(
       {required final double minimum,
       required final double maximum,
-      required final Iterable<double> ticks,
+      required final Iterable<TickLabel> ticks,
       required final String label}) = _$AxisParametersImpl;
   _AxisParameters._() : super._();
 
@@ -184,11 +190,145 @@ abstract class _AxisParameters extends AxisParameters {
   @override
   double get maximum;
   @override
-  Iterable<double> get ticks;
+  Iterable<TickLabel> get ticks;
   @override
   String get label;
   @override
   @JsonKey(ignore: true)
   _$$AxisParametersImplCopyWith<_$AxisParametersImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+mixin _$TickLabel {
+  double get value => throw _privateConstructorUsedError;
+  String get label => throw _privateConstructorUsedError;
+
+  @JsonKey(ignore: true)
+  $TickLabelCopyWith<TickLabel> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $TickLabelCopyWith<$Res> {
+  factory $TickLabelCopyWith(TickLabel value, $Res Function(TickLabel) then) =
+      _$TickLabelCopyWithImpl<$Res, TickLabel>;
+  @useResult
+  $Res call({double value, String label});
+}
+
+/// @nodoc
+class _$TickLabelCopyWithImpl<$Res, $Val extends TickLabel>
+    implements $TickLabelCopyWith<$Res> {
+  _$TickLabelCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? value = null,
+    Object? label = null,
+  }) {
+    return _then(_value.copyWith(
+      value: null == value
+          ? _value.value
+          : value // ignore: cast_nullable_to_non_nullable
+              as double,
+      label: null == label
+          ? _value.label
+          : label // ignore: cast_nullable_to_non_nullable
+              as String,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$TickLabelImplCopyWith<$Res>
+    implements $TickLabelCopyWith<$Res> {
+  factory _$$TickLabelImplCopyWith(
+          _$TickLabelImpl value, $Res Function(_$TickLabelImpl) then) =
+      __$$TickLabelImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({double value, String label});
+}
+
+/// @nodoc
+class __$$TickLabelImplCopyWithImpl<$Res>
+    extends _$TickLabelCopyWithImpl<$Res, _$TickLabelImpl>
+    implements _$$TickLabelImplCopyWith<$Res> {
+  __$$TickLabelImplCopyWithImpl(
+      _$TickLabelImpl _value, $Res Function(_$TickLabelImpl) _then)
+      : super(_value, _then);
+
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? value = null,
+    Object? label = null,
+  }) {
+    return _then(_$TickLabelImpl(
+      value: null == value
+          ? _value.value
+          : value // ignore: cast_nullable_to_non_nullable
+              as double,
+      label: null == label
+          ? _value.label
+          : label // ignore: cast_nullable_to_non_nullable
+              as String,
+    ));
+  }
+}
+
+/// @nodoc
+
+class _$TickLabelImpl implements _TickLabel {
+  _$TickLabelImpl({required this.value, required this.label});
+
+  @override
+  final double value;
+  @override
+  final String label;
+
+  @override
+  String toString() {
+    return 'TickLabel(value: $value, label: $label)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$TickLabelImpl &&
+            (identical(other.value, value) || other.value == value) &&
+            (identical(other.label, label) || other.label == label));
+  }
+
+  @override
+  int get hashCode => Object.hash(runtimeType, value, label);
+
+  @JsonKey(ignore: true)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$TickLabelImplCopyWith<_$TickLabelImpl> get copyWith =>
+      __$$TickLabelImplCopyWithImpl<_$TickLabelImpl>(this, _$identity);
+}
+
+abstract class _TickLabel implements TickLabel {
+  factory _TickLabel(
+      {required final double value,
+      required final String label}) = _$TickLabelImpl;
+
+  @override
+  double get value;
+  @override
+  String get label;
+  @override
+  @JsonKey(ignore: true)
+  _$$TickLabelImplCopyWith<_$TickLabelImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
