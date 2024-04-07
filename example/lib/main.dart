@@ -49,21 +49,37 @@ class _AudioPlotExampleState extends State<AudioPlotExample> {
   final xPoints = <double>[1, 2, 3];
   final yPoints = <double>[5, 1, 3];
 
-  AxisParameters xAxis = AxisParameters(
+  AxisParameters _xAxis = AxisParameters(
     label: "X Axis",
     minimum: 0,
     maximum: 5,
-    ticks: [0, 1, 2, 3, 4, 5]
-        .map((e) => TickLabel(value: e.toDouble(), label: e.toString())),
+    ticks: makeTicks(0, 5, 6)
+        .map((e) => TickLabel(value: e.toDouble(), label: formatTick(e))),
   );
 
-  AxisParameters yAxis = AxisParameters(
+  AxisParameters _yAxis = AxisParameters(
     label: "Y Axis",
     minimum: 1,
     maximum: 6,
-    ticks: [1, 2, 3, 4, 5, 6]
-        .map((e) => TickLabel(value: e.toDouble(), label: e.toString())),
+    ticks: makeTicks(1, 6, 6)
+        .map((e) => TickLabel(value: e.toDouble(), label: formatTick(e))),
   );
+
+  set xAxis(AxisParameters value) {
+    _xAxis = value.copyWith(
+        ticks: makeTicks(value.minimum, value.maximum, 6)
+            .map((e) => TickLabel(value: e.toDouble(), label: formatTick(e))));
+  }
+
+  AxisParameters get xAxis => _xAxis;
+
+  set yAxis(AxisParameters value) {
+    _yAxis = value.copyWith(
+        ticks: makeTicks(value.minimum, value.maximum, 6)
+            .map((e) => TickLabel(value: e.toDouble(), label: formatTick(e))));
+  }
+
+  AxisParameters get yAxis => _yAxis;
 
   @override
   Widget build(BuildContext context) {
@@ -131,4 +147,36 @@ class _AudioPlotExampleState extends State<AudioPlotExample> {
       });
     }
   }
+}
+
+Iterable<double> makeTicks(double min, double max, int maxTickCount) sync* {
+  for (var i = 0; i < maxTickCount; i++) {
+    final r = i / (maxTickCount.toDouble() - 1);
+    yield min + r * (max - min);
+  }
+}
+
+String formatTick(double value) {
+  String fallback(double value) {
+    return value.toStringAsPrecision(3);
+  }
+
+  final sign = value.sign;
+
+  final number = switch (value.abs()) {
+    final value when value >= 1e9 => fallback(value),
+    final value when value >= 1e6 => '${(value / 1e6).toStringAsPrecision(3)}M',
+    final value when value >= 1e3 => '${(value / 1e3).toStringAsPrecision(3)}k',
+    final value when value >= 1e0 => '${value.toStringAsPrecision(3)}',
+    final value when value >= 1e-3 => '${(value * 1e3).toStringAsPrecision(3)}m',
+    final value when value >= 1e-6 => '${(value * 1e6).toStringAsPrecision(3)}u',
+    final value when value >= 1e-9 => '${(value * 1e9).toStringAsPrecision(3)}n',
+    final value when value >= 1e-12 => '${(value * 1e12).toStringAsPrecision(3)}p',
+    _ => fallback(value),
+  };
+
+  return switch(sign) {
+    -1.0 => '-$number',
+    _ => '$number',
+  };
 }
