@@ -47,11 +47,13 @@ class AudioPlotExample extends StatefulWidget {
 class _AudioPlotExampleState extends State<AudioPlotExample> {
   @override
   Widget build(BuildContext context) {
-    return AudioPlot(
-      width: _kWidth,
-      height: _kHeight,
-      xAxisSize: _kXAxisSize,
-      yAxisSize: _kYAxisSize,
+    return LayoutBuilder(
+      builder: (context, constraints) => AudioPlot(
+          width: constraints.maxWidth,
+          height: constraints.maxHeight,
+          xAxisSize: _kXAxisSize,
+          yAxisSize: _kYAxisSize,
+        ),
     );
   }
 }
