@@ -2,6 +2,12 @@ import 'package:audio_plot/audio_plot.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 
+const _kWidth = 700.0;
+const _kHeight = 500.0;
+
+const _kXAxisSize = 39.0;
+const _kYAxisSize = 67.0;
+
 void main() {
   Logger.root.onRecord.listen((record) => debugPrint(record.toString()));
   Logger.root.level = Level.ALL;
@@ -41,6 +47,11 @@ class AudioPlotExample extends StatefulWidget {
 class _AudioPlotExampleState extends State<AudioPlotExample> {
   @override
   Widget build(BuildContext context) {
-    return AudioPlot();
+    return AudioPlot(
+      width: _kWidth,
+      height: _kHeight,
+      xAxisSize: _kXAxisSize,
+      yAxisSize: _kYAxisSize,
+    );
   }
 }

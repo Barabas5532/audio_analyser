@@ -14,14 +14,19 @@ part 'audio_plot.freezed.dart';
 
 final _log = Logger('audio_plot');
 
-const _kWidth = 700.0;
-const _kHeight = 500.0;
-
-const _kXAxisSize = 39.0;
-const _kYAxisSize = 67.0;
-
 class AudioPlot extends StatefulWidget {
-  const AudioPlot({super.key});
+  const AudioPlot({
+    super.key,
+    required this.width,
+    required this.height,
+    required this.xAxisSize,
+    required this.yAxisSize,
+  });
+
+  final double width;
+  final double height;
+  final double xAxisSize;
+  final double yAxisSize;
 
   @override
   State<AudioPlot> createState() => _AudioPlotState();
@@ -50,18 +55,22 @@ class _AudioPlotState extends State<AudioPlot> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: _kWidth,
-      height: _kHeight,
+      width: widget.width,
+      height: widget.height,
       child: Column(
         children: [
           Row(
             children: [
               _YAxis(
+                width: widget.yAxisSize,
+                height: widget.height - widget.xAxisSize,
                 axis: yAxis,
                 translateAxis: translateYAxis,
                 zoomAxis: zoomYAxis,
               ),
               _AudioPlotLineArea(
+                width: widget.width - widget.yAxisSize,
+                height: widget.height - widget.xAxisSize,
                 xAxis: xAxis,
                 yAxis: yAxis,
                 translateAxes: (delta) {
@@ -79,6 +88,8 @@ class _AudioPlotState extends State<AudioPlot> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               _XAxis(
+                width: widget.width - widget.yAxisSize,
+                height: widget.xAxisSize,
                 axis: xAxis,
                 translateAxis: translateXAxis,
                 zoomAxis: zoomXAxis,
@@ -140,6 +151,8 @@ class _AudioPlotState extends State<AudioPlot> {
 
 class _AudioPlotLineArea extends StatelessWidget {
   const _AudioPlotLineArea({
+    required this.width,
+    required this.height,
     required this.xAxis,
     required this.yAxis,
     required this.translateAxes,
@@ -148,6 +161,9 @@ class _AudioPlotLineArea extends StatelessWidget {
     required this.xPoints,
     required this.yPoints,
   });
+
+  final double width;
+  final double height;
 
   final AxisParameters xAxis;
   final AxisParameters yAxis;
@@ -163,24 +179,18 @@ class _AudioPlotLineArea extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onPanUpdate: (data) {
-        const width = _kWidth;
-        const height = _kHeight;
-
         final delta = Offset(data.delta.dx / width * xAxis.range,
             data.delta.dy / height * yAxis.range);
 
         translateAxes(delta);
       },
       child: SizedBox(
-        width: _kWidth - _kYAxisSize,
-        height: _kHeight - _kXAxisSize,
+        width: width,
+        height: height,
         child: Listener(
           onPointerSignal: (pointerSignal) {
             switch (pointerSignal) {
               case PointerScrollEvent scrollEvent:
-                const width = _kWidth - _kYAxisSize;
-                const height = _kHeight - _kXAxisSize;
-
                 final delta = scrollEvent.scrollDelta.dy;
                 {
                   final r = (scrollEvent.localPosition.dx / width);
@@ -302,14 +312,18 @@ class _AudioPlotPainter extends CustomPainter {
 
 class _YAxis extends StatelessWidget {
   const _YAxis(
-      {required this.axis,
+      {required this.height,
+      required this.width,
+      required this.axis,
       required this.translateAxis,
       required this.zoomAxis});
+
+  final double width;
+  final double height;
 
   final AxisParameters axis;
   final void Function(double offset) translateAxis;
   final void Function(double delta, double r) zoomAxis;
-  static const height = _kHeight - _kXAxisSize;
 
   @override
   Widget build(BuildContext context) {
@@ -356,7 +370,7 @@ class _YAxis extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: _kYAxisSize, height: height),
+              SizedBox(width: width, height: height),
             ],
           ),
         ),
@@ -372,14 +386,19 @@ class _YAxis extends StatelessWidget {
 
 class _XAxis extends StatelessWidget {
   const _XAxis(
-      {required this.axis,
+      {
+        required this.width,
+        required this.height,
+        required this.axis,
       required this.translateAxis,
       required this.zoomAxis});
+
+  final double width;
+  final double height;
 
   final AxisParameters axis;
   final void Function(double offset) translateAxis;
   final void Function(double delta, double r) zoomAxis;
-  static const width = _kWidth - _kYAxisSize;
 
   @override
   Widget build(BuildContext context) {
@@ -420,7 +439,7 @@ class _XAxis extends StatelessWidget {
                 child: Text(axis.label),
               ),
             ),
-            const SizedBox(width: _kWidth - _kYAxisSize, height: _kXAxisSize),
+            SizedBox(width: width, height: height),
           ]),
         ),
       ),
