@@ -6,21 +6,27 @@ import 'package:collection/collection.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'dart:math' as m;
-
 import 'package:logging/logging.dart';
 
 part 'audio_plot.freezed.dart';
 
 final _log = Logger('audio_plot');
 
-class AudioPlot extends StatefulWidget {
+class AudioPlot extends StatelessWidget {
   const AudioPlot({
     super.key,
     required this.width,
     required this.height,
     required this.xAxisSize,
     required this.yAxisSize,
+    required this.xPoints,
+    required this.yPoints,
+    required this.translateXAxis,
+    required this.translateYAxis,
+    required this.zoomXAxis,
+    required this.zoomYAxis,
+    required this.xAxis,
+    required this.yAxis,
   });
 
   final double width;
@@ -28,49 +34,37 @@ class AudioPlot extends StatefulWidget {
   final double xAxisSize;
   final double yAxisSize;
 
-  @override
-  State<AudioPlot> createState() => _AudioPlotState();
-}
+  final Iterable<double> xPoints;
+  final Iterable<double> yPoints;
 
-class _AudioPlotState extends State<AudioPlot> {
-  final xPoints = <double>[1, 2, 3];
-  final yPoints = <double>[5, 1, 3];
+  final void Function(double delta) translateXAxis;
+  final void Function(double delta) translateYAxis;
 
-  AxisParameters xAxis = AxisParameters(
-    label: "X Axis",
-    minimum: 0,
-    maximum: 5,
-    ticks: [0, 1, 2, 3, 4, 5]
-        .map((e) => TickLabel(value: e.toDouble(), label: e.toString())),
-  );
+  final void Function(double delta, double r) zoomXAxis;
+  final void Function(double delta, double r) zoomYAxis;
 
-  AxisParameters yAxis = AxisParameters(
-    label: "Y Axis",
-    minimum: 1,
-    maximum: 6,
-    ticks: [1, 2, 3, 4, 5, 6]
-        .map((e) => TickLabel(value: e.toDouble(), label: e.toString())),
-  );
+  final AxisParameters xAxis;
+  final AxisParameters yAxis;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: widget.width,
-      height: widget.height,
+      width: width,
+      height: height,
       child: Column(
         children: [
           Row(
             children: [
               _YAxis(
-                width: widget.yAxisSize,
-                height: widget.height - widget.xAxisSize,
+                width: yAxisSize,
+                height: height - xAxisSize,
                 axis: yAxis,
                 translateAxis: translateYAxis,
                 zoomAxis: zoomYAxis,
               ),
               _AudioPlotLineArea(
-                width: widget.width - widget.yAxisSize,
-                height: widget.height - widget.xAxisSize,
+                width: width - yAxisSize,
+                height: height - xAxisSize,
                 xAxis: xAxis,
                 yAxis: yAxis,
                 translateAxes: (delta) {
@@ -88,8 +82,8 @@ class _AudioPlotState extends State<AudioPlot> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               _XAxis(
-                width: widget.width - widget.yAxisSize,
-                height: widget.xAxisSize,
+                width: width - yAxisSize,
+                height: xAxisSize,
                 axis: xAxis,
                 translateAxis: translateXAxis,
                 zoomAxis: zoomXAxis,
@@ -99,53 +93,6 @@ class _AudioPlotState extends State<AudioPlot> {
         ],
       ),
     );
-  }
-
-  void translateYAxis(double dy) {
-    setState(() {
-      yAxis = yAxis.copyWith(
-          minimum: yAxis.minimum + dy, maximum: yAxis.maximum + dy);
-    });
-  }
-
-  void translateXAxis(double dx) {
-    setState(() {
-      xAxis = xAxis.copyWith(
-          minimum: xAxis.minimum - dx, maximum: xAxis.maximum - dx);
-    });
-  }
-
-  void zoomYAxis(delta, r) {
-    final factor = m.log(delta.abs()) / 3;
-    final ratio = delta < 0 ? factor : 1 / factor;
-
-    final a = yAxis.maximum;
-    final b = yAxis.minimum;
-
-    {
-      final f = a + (b - a) * r;
-      final aPrime = f - r * (b - a) / ratio;
-      final bPrime = aPrime + (b - a) / ratio;
-      setState(() {
-        yAxis = yAxis.copyWith(minimum: bPrime, maximum: aPrime);
-      });
-    }
-  }
-
-  void zoomXAxis(double delta, double r) {
-    final factor = m.log(delta.abs()) / 3;
-    final ratio = delta < 0 ? factor : 1 / factor;
-
-    var a = xAxis.minimum;
-    var b = xAxis.maximum;
-    {
-      final f = a + (b - a) * r;
-      final aPrime = f - r * (b - a) / ratio;
-      final bPrime = aPrime + (b - a) / ratio;
-      setState(() {
-        xAxis = xAxis.copyWith(minimum: aPrime, maximum: bPrime);
-      });
-    }
   }
 }
 
@@ -386,10 +333,9 @@ class _YAxis extends StatelessWidget {
 
 class _XAxis extends StatelessWidget {
   const _XAxis(
-      {
-        required this.width,
-        required this.height,
-        required this.axis,
+      {required this.width,
+      required this.height,
+      required this.axis,
       required this.translateAxis,
       required this.zoomAxis});
 
