@@ -28,6 +28,9 @@ class AudioPlot extends StatefulWidget {
 }
 
 class _AudioPlotState extends State<AudioPlot> {
+  final xPoints = <double>[1, 2, 3];
+  final yPoints = <double>[5, 1, 3];
+
   AxisParameters xAxis = AxisParameters(
     label: "X Axis",
     minimum: 0,
@@ -62,14 +65,13 @@ class _AudioPlotState extends State<AudioPlot> {
                 xAxis: xAxis,
                 yAxis: yAxis,
                 translateAxes: (delta) {
-                  final dx = delta.dx;
-                  final dy = delta.dy;
-
-                  translateXAxis(dx);
-                  translateYAxis(dy);
+                  translateXAxis(delta.dx);
+                  translateYAxis(delta.dy);
                 },
                 zoomXAxis: zoomXAxis,
                 zoomYAxis: zoomYAxis,
+                xPoints: xPoints,
+                yPoints: yPoints,
               ),
             ],
           ),
@@ -143,10 +145,15 @@ class _AudioPlotLineArea extends StatelessWidget {
     required this.translateAxes,
     required this.zoomXAxis,
     required this.zoomYAxis,
+    required this.xPoints,
+    required this.yPoints,
   });
 
   final AxisParameters xAxis;
   final AxisParameters yAxis;
+
+  final Iterable<double> xPoints;
+  final Iterable<double> yPoints;
 
   final void Function(Offset offset) translateAxes;
   final void Function(double scale, double about) zoomXAxis;
@@ -191,8 +198,8 @@ class _AudioPlotLineArea extends StatelessWidget {
               painter: _AudioPlotPainter(
                 xAxis: xAxis,
                 yAxis: yAxis,
-                xPoints: [1, 2, 3],
-                yPoints: [5, 1, 3],
+                xPoints: xPoints,
+                yPoints: yPoints,
                 tickTextStyle: Theme.of(context).textTheme.labelMedium!,
                 labelTextStyle: Theme.of(context).textTheme.bodyMedium!,
               ),

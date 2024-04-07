@@ -22,9 +22,25 @@ class MyApp extends StatelessWidget {
       ),
       home: const Scaffold(
         body: Center(
-          child: AudioPlot(),
+          child: AudioPlotExample(),
         ),
       ),
     );
+  }
+}
+
+class AudioPlotExample extends StatefulWidget {
+  const AudioPlotExample({
+    super.key,
+  });
+
+  @override
+  State<AudioPlotExample> createState() => _AudioPlotExampleState();
+}
+
+class _AudioPlotExampleState extends State<AudioPlotExample> {
+  @override
+  Widget build(BuildContext context) {
+    return AudioPlot();
   }
 }
