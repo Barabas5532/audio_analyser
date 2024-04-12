@@ -1,6 +1,5 @@
 library audio_plot;
 
-import 'dart:ui';
 
 import 'package:collection/collection.dart';
 import 'package:flutter/gestures.dart';
@@ -10,6 +9,7 @@ import 'package:logging/logging.dart';
 
 part 'audio_plot.freezed.dart';
 
+// ignore: unused_element
 final _log = Logger('audio_plot');
 
 class AudioPlot extends StatelessWidget {
