@@ -40,7 +40,7 @@ class AudioPlotExample extends StatefulWidget {
   State<AudioPlotExample> createState() => _AudioPlotExampleState();
 }
 
-extension on double {
+extension DoubleMagnitudeEx on double {
   NumberMagnitude get magnitude => switch (this) {
         final _ when this >= 1e9 => NumberMagnitude.larger,
         final _ when this >= 1e6 => NumberMagnitude.mega,
@@ -52,6 +52,16 @@ extension on double {
         final _ when this >= 1e-12 => NumberMagnitude.pico,
         _ => NumberMagnitude.larger,
       };
+}
+
+extension DoubleLabelFormatEx on double {
+  String toLabelFormat() {
+    if (abs() < 1) {
+      return toStringAsFixed(2);
+    }
+
+    return toStringAsPrecision(3);
+  }
 }
 
 extension on Iterable<double> {
@@ -225,13 +235,13 @@ String formatTick(double value, NumberMagnitude magnitude) {
   value = value.abs();
 
   final number = switch (magnitude) {
-    NumberMagnitude.mega => '${(value / 1e6).toStringAsPrecision(3)}M',
-    NumberMagnitude.kilo => '${(value / 1e3).toStringAsPrecision(3)}k',
-    NumberMagnitude.base => value.toStringAsPrecision(3),
-    NumberMagnitude.milli => '${(value * 1e3).toStringAsPrecision(3)}m',
-    NumberMagnitude.micro => '${(value * 1e6).toStringAsPrecision(3)}u',
-    NumberMagnitude.nano => '${(value * 1e9).toStringAsPrecision(3)}n',
-    NumberMagnitude.pico => '${(value * 1e12).toStringAsPrecision(3)}p',
+    NumberMagnitude.mega => '${(value / 1e6).toLabelFormat()}M',
+    NumberMagnitude.kilo => '${(value / 1e3).toLabelFormat()}k',
+    NumberMagnitude.base => value.toLabelFormat(),
+    NumberMagnitude.milli => '${(value * 1e3).toLabelFormat()}m',
+    NumberMagnitude.micro => '${(value * 1e6).toLabelFormat()}u',
+    NumberMagnitude.nano => '${(value * 1e9).toLabelFormat()}n',
+    NumberMagnitude.pico => '${(value * 1e12).toLabelFormat()}p',
     _ => fallback(value),
   };
 
