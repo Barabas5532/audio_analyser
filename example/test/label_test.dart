@@ -17,6 +17,12 @@ void main() {
         .map((key, _) => MapEntry(key, formatTick(key, key.magnitude)));
 
     expect(result, reference);
+
+    final resultNegative = reference
+        .map((key, _) => MapEntry(key, formatTick(-key, (-key).magnitude)));
+
+    expect(resultNegative,
+        reference.map((key, value) => MapEntry(key, '-$value')));
   });
 
   test('label formatting 2', () {
@@ -31,5 +37,11 @@ void main() {
         .map((key, _) => MapEntry(key, formatTick(key, NumberMagnitude.base)));
 
     expect(result, reference);
+
+    final resultNegative = reference
+        .map((key, _) => MapEntry(key, formatTick(-key, NumberMagnitude.base)));
+
+    expect(resultNegative,
+        reference.map((key, value) => MapEntry(key, '-$value')));
   });
 }

@@ -41,15 +41,15 @@ class AudioPlotExample extends StatefulWidget {
 }
 
 extension DoubleMagnitudeEx on double {
-  NumberMagnitude get magnitude => switch (this) {
-        final _ when this >= 1e9 => NumberMagnitude.larger,
-        final _ when this >= 1e6 => NumberMagnitude.mega,
-        final _ when this >= 1e3 => NumberMagnitude.kilo,
-        final _ when this >= 1e0 => NumberMagnitude.base,
-        final _ when this >= 1e-3 => NumberMagnitude.milli,
-        final _ when this >= 1e-6 => NumberMagnitude.micro,
-        final _ when this >= 1e-9 => NumberMagnitude.nano,
-        final _ when this >= 1e-12 => NumberMagnitude.pico,
+  NumberMagnitude get magnitude => switch (abs()) {
+        final a when a >= 1e9 => NumberMagnitude.larger,
+        final a when a >= 1e6 => NumberMagnitude.mega,
+        final a when a >= 1e3 => NumberMagnitude.kilo,
+        final a when a >= 1e0 => NumberMagnitude.base,
+        final a when a >= 1e-3 => NumberMagnitude.milli,
+        final a when a >= 1e-6 => NumberMagnitude.micro,
+        final a when a >= 1e-9 => NumberMagnitude.nano,
+        final a when a >= 1e-12 => NumberMagnitude.pico,
         _ => NumberMagnitude.larger,
       };
 }
