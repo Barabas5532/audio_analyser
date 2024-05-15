@@ -1,4 +1,6 @@
 import 'package:audio_plot/audio_plot.dart';
+import 'package:audio_plot/trigger.dart';
+import 'package:example/fake_audio_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'dart:math' as m;
@@ -40,47 +42,46 @@ class AudioPlotExample extends StatefulWidget {
   State<AudioPlotExample> createState() => _AudioPlotExampleState();
 }
 
-extension DoubleMagnitudeEx on double {
-  NumberMagnitude get magnitude => switch (abs()) {
-        final a when a >= 1e9 => NumberMagnitude.larger,
-        final a when a >= 1e6 => NumberMagnitude.mega,
-        final a when a >= 1e3 => NumberMagnitude.kilo,
-        final a when a >= 1e0 => NumberMagnitude.base,
-        final a when a >= 1e-3 => NumberMagnitude.milli,
-        final a when a >= 1e-6 => NumberMagnitude.micro,
-        final a when a >= 1e-9 => NumberMagnitude.nano,
-        final a when a >= 1e-12 => NumberMagnitude.pico,
-        _ => NumberMagnitude.larger,
-      };
-}
-
-extension DoubleLabelFormatEx on double {
-  String toLabelFormat() {
-    if (abs() < 1) {
-      return toStringAsFixed(2);
-    }
-
-    return toStringAsPrecision(3);
-  }
-}
-
-extension on Iterable<double> {
-  NumberMagnitude maxMagnitude() {
-    final sorted = toList()..sort();
-    return sorted.last.magnitude;
-  }
-}
-
 class _AudioPlotExampleState extends State<AudioPlotExample> {
-  final xPoints = <double>[1, 2, 3];
-  final yPoints = <double>[5, 1, 3];
+  static const rate = 48000.0;
+  static const bufferSize = 512;
+
+  final trigger = Trigger();
+
+  int lastScreenBufferSize = 0;
+  int lastPostTriggerBufferSize = 0;
+
+  late final FakeAudioEngine engine;
+
+  List<double>? waveform;
+
+  @override
+  void initState() {
+    super.initState();
+
+    engine = FakeAudioEngine(rate, bufferSize, process: _process);
+
+    trigger.triggered.listen((event) {
+      setState(() {
+        waveform = event;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    engine.dispose();
+    trigger.dispose();
+  }
 
   AxisParameters _xAxis = AxisParameters(
     label: "X Axis",
-    minimum: 0,
-    maximum: 5,
+    minimum: -10e-3,
+    maximum: 10e-3,
     ticks: () {
-      final ticks = makeTicks(0, 5, 6);
+      final ticks = makeTicks(-10e-3, 10e-3, 6);
       return ticks.map((e) => TickLabel(
           value: e.toDouble(), label: formatTick(e, ticks.maxMagnitude())));
     }(),
@@ -88,10 +89,10 @@ class _AudioPlotExampleState extends State<AudioPlotExample> {
 
   AxisParameters _yAxis = AxisParameters(
     label: "Y Axis",
-    minimum: 1,
-    maximum: 6,
+    minimum: -1.2,
+    maximum: 1.2,
     ticks: () {
-      final ticks = makeTicks(1, 6, 6);
+      final ticks = makeTicks(-1.2, 1.2, 6);
       return ticks.map((e) => TickLabel(
           value: e.toDouble(), label: formatTick(e, ticks.maxMagnitude())));
     }(),
@@ -117,6 +118,9 @@ class _AudioPlotExampleState extends State<AudioPlotExample> {
 
   @override
   Widget build(BuildContext context) {
+    final xPoints = waveform?.indexed.map((e) => xAxis.minimum + e.$1 / rate ) ?? [];
+    final yPoints = waveform ?? [];
+
     return LayoutBuilder(
       builder: (context, constraints) => AudioPlot(
         width: constraints.maxWidth,
@@ -180,6 +184,55 @@ class _AudioPlotExampleState extends State<AudioPlotExample> {
         xAxis = xAxis.copyWith(minimum: aPrime, maximum: bPrime);
       });
     }
+  }
+
+  void _process(AudioBuffer buffer) {
+    final screenBufferSize = (xAxis.range * rate).toInt();
+    if (lastScreenBufferSize != screenBufferSize) {
+      lastScreenBufferSize = screenBufferSize;
+      trigger.setScreenBufferSize(screenBufferSize);
+    }
+
+    final postTriggerBufferSize = screenBufferSize * (1 - triggerRatio).toInt();
+    if (lastPostTriggerBufferSize != postTriggerBufferSize) {
+      lastPostTriggerBufferSize = postTriggerBufferSize;
+      trigger.setPostTriggerBufferSize(postTriggerBufferSize);
+    }
+
+    trigger.process(buffer);
+  }
+
+  double get triggerRatio => xAxis.minimum.abs() / xAxis.range;
+}
+
+extension DoubleMagnitudeEx on double {
+  NumberMagnitude get magnitude => switch (abs()) {
+  final a when a >= 1e9 => NumberMagnitude.larger,
+  final a when a >= 1e6 => NumberMagnitude.mega,
+  final a when a >= 1e3 => NumberMagnitude.kilo,
+  final a when a >= 1e0 => NumberMagnitude.base,
+  final a when a >= 1e-3 => NumberMagnitude.milli,
+  final a when a >= 1e-6 => NumberMagnitude.micro,
+  final a when a >= 1e-9 => NumberMagnitude.nano,
+  final a when a >= 1e-12 => NumberMagnitude.pico,
+  _ => NumberMagnitude.larger,
+  };
+}
+
+extension DoubleLabelFormatEx on double {
+  String toLabelFormat() {
+    if (abs() < 1) {
+      return toStringAsFixed(2);
+    }
+
+    return toStringAsPrecision(3);
+  }
+}
+
+extension on Iterable<double> {
+  NumberMagnitude maxMagnitude() {
+    final sorted = toList()..sort();
+    return sorted.last.magnitude;
   }
 }
 
