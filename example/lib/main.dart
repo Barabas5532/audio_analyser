@@ -8,6 +8,8 @@ import 'dart:math' as m;
 const _kXAxisSize = 39.0;
 const _kYAxisSize = 67.0;
 
+final _log = Logger('main');
+
 void main() {
   Logger.root.onRecord.listen((record) => debugPrint(record.toString()));
   Logger.root.level = Level.ALL;
@@ -189,18 +191,32 @@ class _AudioPlotExampleState extends State<AudioPlotExample> {
   void _process(AudioBuffer buffer) {
     final screenBufferSize = (xAxis.range * rate).toInt();
     if (lastScreenBufferSize != screenBufferSize) {
+      _log.info('update screen $screenBufferSize');
+
       lastScreenBufferSize = screenBufferSize;
       trigger.setScreenBufferSize(screenBufferSize);
     }
 
-    final postTriggerBufferSize = screenBufferSize * (1 - triggerRatio).toInt();
+    final postTriggerBufferSize = (screenBufferSize * (1 - triggerRatio)).toInt();
     if (lastPostTriggerBufferSize != postTriggerBufferSize) {
+      _log.info('update post trigger $postTriggerBufferSize');
+
       lastPostTriggerBufferSize = postTriggerBufferSize;
       trigger.setPostTriggerBufferSize(postTriggerBufferSize);
     }
 
+    if(iter > 100)
+    {
+      iter = 0;
+      _log.info('screen $screenBufferSize post trigger $postTriggerBufferSize');
+    }
+    else {
+      iter++;
+    }
     trigger.process(buffer);
   }
+
+  int iter = 0;
 
   double get triggerRatio => xAxis.minimum.abs() / xAxis.range;
 }
