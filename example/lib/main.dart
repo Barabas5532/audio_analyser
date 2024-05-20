@@ -149,6 +149,15 @@ class _AudioPlotExampleState extends State<AudioPlotExample> {
   }
 
   void translateXAxis(double dx) {
+    // do not allow moving the trigger point out of the screen
+    if(xAxis.minimum - dx > 0) {
+        dx = xAxis.minimum;
+    }
+
+    if(xAxis.maximum - dx < 0) {
+      dx = xAxis.maximum;
+    }
+
     setState(() {
       xAxis = xAxis.copyWith(
           minimum: xAxis.minimum - dx, maximum: xAxis.maximum - dx);
