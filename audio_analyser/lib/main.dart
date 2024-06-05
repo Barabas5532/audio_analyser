@@ -9,7 +9,7 @@ import 'embedding/juce_connection.dart';
 import 'embedding/native_platform_method_channel.dart';
 import 'embedding/proto/generated/audio_analyser.pbgrpc.dart' as grpc;
 import 'trigger.dart';
-import 'fake_audio_engine.dart';
+import 'audio_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:grpc/grpc.dart' as grpc;
@@ -131,7 +131,7 @@ class _AudioPlotExampleState extends State<AudioPlotExample> {
   void initState() {
     super.initState();
 
-    engine = FakeAudioEngine(rate, bufferSize, process: _process);
+    engine = FakeAudioEngine(rate, bufferSize)..audio.listen(_process);
 
     trigger.triggered.listen((event) {
       setState(() {

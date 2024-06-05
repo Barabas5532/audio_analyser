@@ -6,16 +6,20 @@ import 'package:logging/logging.dart';
 
 final _log = Logger('fake_audio_engine');
 
-class FakeAudioEngine {
-  FakeAudioEngine(this.sampleRate, this.bufferSize, {required this.process}) {
+abstract class AudioEngineBase {
+  Stream<AudioBuffer> get audio;
+
+  void dispose();
+}
+
+class FakeAudioEngine extends AudioEngineBase {
+  FakeAudioEngine(this.sampleRate, this.bufferSize) {
     final bufferPeriodMs = bufferSize / sampleRate * 1000;
     _log.info('Timer period: $bufferPeriodMs ms');
 
     timer = Timer.periodic(Duration(milliseconds: bufferPeriodMs.toInt()),
         (_) => _generateBuffer());
   }
-
-  void Function(AudioBuffer buffer) process;
 
   double sampleRate;
   int bufferSize;
@@ -24,15 +28,20 @@ class FakeAudioEngine {
 
   late final generator = _SineGenerator(sampleRate, 1000);
 
+  final controller = StreamController<AudioBuffer>();
+
   void _generateBuffer() {
     final buffer = generator.generate(bufferSize);
-
-    process(buffer);
+    controller.add(buffer);
   }
 
+  @override
   void dispose() {
     timer.cancel();
   }
+
+  @override
+  Stream<AudioBuffer> get audio => controller.stream;
 }
 
 class _SineGenerator {
