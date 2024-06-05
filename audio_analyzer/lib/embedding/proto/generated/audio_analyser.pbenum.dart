@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: juce_embed_gtk.proto
+//  source: audio_analyser.proto
 //
 // @dart = 2.12
 

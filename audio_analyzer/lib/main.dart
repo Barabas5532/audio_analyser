@@ -7,7 +7,7 @@ import 'rate_counter.dart';
 import 'audio_plot.dart';
 import 'embedding/juce_connection.dart';
 import 'embedding/native_platform_method_channel.dart';
-import 'embedding/proto/generated/juce_embed_gtk.pbgrpc.dart' as grpc;
+import 'embedding/proto/generated/audio_analyser.pbgrpc.dart' as grpc;
 import 'trigger.dart';
 import 'fake_audio_engine.dart';
 import 'package:flutter/material.dart';
@@ -21,26 +21,8 @@ const _kYAxisSize = 67.0;
 final _log = Logger('main');
 
 class FakeBackend extends ChangeNotifier implements AudioBackend {
-  FakeBackend() {
-    Future.delayed(const Duration(seconds: 2), () {
-      _gain = 0.5;
-      notifyListeners();
-    });
-  }
-
   @override
   Future<void> sendWindowId(int id) async => Future<void>.value();
-
-  double? _gain;
-
-  @override
-  set gain(double? gain) {
-    _gain = gain;
-    notifyListeners();
-  }
-
-  @override
-  double? get gain => _gain;
 }
 
 void main(List<String> args) async {
@@ -78,7 +60,7 @@ void main(List<String> args) async {
             codecs: [const grpc.GzipCodec(), const grpc.IdentityCodec()]),
       ),
     );
-    final client = grpc.JuceEmbedGtkClient(channel);
+    final client = grpc.AudioAnalyserClient(channel);
 
     final streamingClient = grpc.AudioStreamingClient(channel);
 
@@ -115,15 +97,11 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const Scaffold(
-        body: Center(
-          child: Column(
-            children: [
-              Flexible(child: AudioPlotExample()),
-              Flexible(child: GainPage()),
-            ],
-          ),
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Audio Analyser'),
         ),
+        body: const AudioPlotExample(),
       ),
     );
   }
@@ -419,18 +397,4 @@ String formatTick(double value, NumberMagnitude magnitude) {
     -1.0 => '-$number',
     _ => number,
   };
-}
-
-class GainPage extends StatelessWidget {
-  const GainPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final backend = context.watch<AudioBackend>();
-
-    return Slider(
-      value: backend.gain ?? 0,
-      onChanged: backend.gain == null ? null : (v) => backend.gain = v,
-    );
-  }
 }

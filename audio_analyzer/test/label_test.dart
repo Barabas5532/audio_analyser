@@ -1,4 +1,4 @@
-import 'package:audio_analyzer/main.dart';
+import 'package:audio_analyser/main.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

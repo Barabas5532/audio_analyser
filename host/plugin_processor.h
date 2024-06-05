@@ -5,11 +5,11 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 
 //==============================================================================
-class AudioPluginAudioProcessor final : public juce::AudioProcessor {
+class AudioAnalyserAudioProcessor final : public juce::AudioProcessor {
 public:
   //==============================================================================
-  AudioPluginAudioProcessor();
-  ~AudioPluginAudioProcessor() override = default;
+  AudioAnalyserAudioProcessor();
+  ~AudioAnalyserAudioProcessor() override = default;
 
   //==============================================================================
   void prepareToPlay(double sampleRate, int samplesPerBlock) override;
@@ -43,8 +43,6 @@ public:
   void getStateInformation(juce::MemoryBlock &destData) override;
   void setStateInformation(const void *data, int sizeInBytes) override;
 
-  juce::AudioProcessorValueTreeState parameters;
-
   GrpcServerThread server_thread;
   std::atomic<unsigned long> wId;
   std::atomic<int> grpc_server_port;
@@ -52,9 +50,6 @@ public:
   AudioQueue queue;
 
 private:
-  juce::Random random;
-  std::atomic<float> *gain;
-
   //==============================================================================
-  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessor)
+  JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioAnalyserAudioProcessor)
 };

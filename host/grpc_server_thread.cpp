@@ -1,13 +1,13 @@
 #include "grpc_server_thread.h"
 #include "audio_queue.h"
-#include "juce_embed_gtk.grpc.pb.h"
+#include "audio_analyser.grpc.pb.h"
 #include "plugin_processor.h"
 #include <cinttypes>
 #include <grpcpp/server_builder.h>
 
-class JuceEmbedGtkImpl final : public JuceEmbedGtk::Service {
+class AudioAnalyserImpl final : public AudioAnalyser::Service {
 public:
-  explicit JuceEmbedGtkImpl(AudioPluginAudioProcessor &a_processor)
+  explicit AudioAnalyserImpl(AudioAnalyserAudioProcessor &a_processor)
       : processor{a_processor} {};
 
   grpc::Status SetWindowId(::grpc::ServerContext *context,
@@ -22,29 +22,8 @@ public:
     return grpc::Status::OK;
   }
 
-  grpc::Status GetParameter(::grpc::ServerContext *context,
-                            const ::Void *request,
-                            ::ParameterValue *response) override {
-    juce::Logger::outputDebugString("Get parameter");
-    response->set_value(*processor.parameters.getRawParameterValue("gain"));
-
-    return grpc::Status::OK;
-  }
-
-  grpc::Status SetParameter(::grpc::ServerContext *context,
-                            const ::ParameterValue *request,
-                            ::Void *response) override {
-    juce::Logger::outputDebugString(
-        juce::String::formatted("Set parameter %f", request->value()));
-
-    processor.parameters.getParameter("gain")->setValueNotifyingHost(
-        request->value());
-
-    return grpc::Status::OK;
-  }
-
 private:
-  AudioPluginAudioProcessor &processor;
+  AudioAnalyserAudioProcessor &processor;
 };
 
 class AudioStreamingImpl final : public AudioStreaming::Service,
@@ -109,7 +88,7 @@ private:
 };
 
 void GrpcServerThread::run() {
-  auto service = JuceEmbedGtkImpl{processor};
+  auto service = AudioAnalyserImpl{processor};
   auto audio_streaming_service = AudioStreamingImpl{processor.queue};
 
   std::string server_address{"localhost:0"};
@@ -131,5 +110,5 @@ void GrpcServerThread::run() {
   juce::Logger::outputDebugString("gRPC server finished");
 }
 
-GrpcServerThread::GrpcServerThread(AudioPluginAudioProcessor &a_processor)
+GrpcServerThread::GrpcServerThread(AudioAnalyserAudioProcessor &a_processor)
     : Thread("grpc"), processor{a_processor} {}

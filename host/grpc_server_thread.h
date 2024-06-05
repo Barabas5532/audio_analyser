@@ -2,13 +2,13 @@
 
 #include <juce_core/juce_core.h>
 
-class AudioPluginAudioProcessor;
+class AudioAnalyserAudioProcessor;
 
 class GrpcServerThread : public juce::Thread {
 public:
-  explicit GrpcServerThread(AudioPluginAudioProcessor &processor);
+  explicit GrpcServerThread(AudioAnalyserAudioProcessor &processor);
 
 private:
-  void run() override; 
-  AudioPluginAudioProcessor &processor;
+  void run() override;
+  AudioAnalyserAudioProcessor &processor;
 };

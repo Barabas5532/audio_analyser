@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: juce_embed_gtk.proto
+//  source: audio_analyser.proto
 //
 // @dart = 2.12
 
@@ -32,18 +32,6 @@ const WindowId$json = {
 /// Descriptor for `WindowId`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List windowIdDescriptor =
     $convert.base64Decode('CghXaW5kb3dJZBIOCgJpZBgBIAEoBFICaWQ=');
-
-@$core.Deprecated('Use parameterValueDescriptor instead')
-const ParameterValue$json = {
-  '1': 'ParameterValue',
-  '2': [
-    {'1': 'value', '3': 1, '4': 1, '5': 2, '10': 'value'},
-  ],
-};
-
-/// Descriptor for `ParameterValue`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List parameterValueDescriptor = $convert
-    .base64Decode('Cg5QYXJhbWV0ZXJWYWx1ZRIUCgV2YWx1ZRgBIAEoAlIFdmFsdWU=');
 
 @$core.Deprecated('Use audioBufferDescriptor instead')
 const AudioBuffer$json = {

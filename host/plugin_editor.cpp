@@ -3,7 +3,7 @@
 
 //==============================================================================
 AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(
-    AudioPluginAudioProcessor &p)
+    AudioAnalyserAudioProcessor &p)
     : AudioProcessorEditor(&p), processorRef(p),
       embeddedComponent(atomic_load(&this->processorRef.wId)) {
   juce::Logger::writeToLog("Constructing editor");

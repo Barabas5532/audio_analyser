@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: juce_embed_gtk.proto
+//  source: audio_analyser.proto
 //
 // @dart = 2.12
 
@@ -15,26 +15,18 @@ import 'dart:core' as $core;
 import 'package:grpc/service_api.dart' as $grpc;
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import 'juce_embed_gtk.pb.dart' as $0;
+import 'audio_analyser.pb.dart' as $0;
 
-export 'juce_embed_gtk.pb.dart';
+export 'audio_analyser.pb.dart';
 
-@$pb.GrpcServiceName('JuceEmbedGtk')
-class JuceEmbedGtkClient extends $grpc.Client {
+@$pb.GrpcServiceName('AudioAnalyser')
+class AudioAnalyserClient extends $grpc.Client {
   static final _$setWindowId = $grpc.ClientMethod<$0.WindowId, $0.Void>(
-      '/JuceEmbedGtk/SetWindowId',
+      '/AudioAnalyser/SetWindowId',
       ($0.WindowId value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.Void.fromBuffer(value));
-  static final _$getParameter = $grpc.ClientMethod<$0.Void, $0.ParameterValue>(
-      '/JuceEmbedGtk/GetParameter',
-      ($0.Void value) => value.writeToBuffer(),
-      ($core.List<$core.int> value) => $0.ParameterValue.fromBuffer(value));
-  static final _$setParameter = $grpc.ClientMethod<$0.ParameterValue, $0.Void>(
-      '/JuceEmbedGtk/SetParameter',
-      ($0.ParameterValue value) => value.writeToBuffer(),
-      ($core.List<$core.int> value) => $0.Void.fromBuffer(value));
 
-  JuceEmbedGtkClient($grpc.ClientChannel channel,
+  AudioAnalyserClient($grpc.ClientChannel channel,
       {$grpc.CallOptions? options,
       $core.Iterable<$grpc.ClientInterceptor>? interceptors})
       : super(channel, options: options, interceptors: interceptors);
@@ -43,43 +35,19 @@ class JuceEmbedGtkClient extends $grpc.Client {
       {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$setWindowId, request, options: options);
   }
-
-  $grpc.ResponseFuture<$0.ParameterValue> getParameter($0.Void request,
-      {$grpc.CallOptions? options}) {
-    return $createUnaryCall(_$getParameter, request, options: options);
-  }
-
-  $grpc.ResponseFuture<$0.Void> setParameter($0.ParameterValue request,
-      {$grpc.CallOptions? options}) {
-    return $createUnaryCall(_$setParameter, request, options: options);
-  }
 }
 
-@$pb.GrpcServiceName('JuceEmbedGtk')
-abstract class JuceEmbedGtkServiceBase extends $grpc.Service {
-  $core.String get $name => 'JuceEmbedGtk';
+@$pb.GrpcServiceName('AudioAnalyser')
+abstract class AudioAnalyserServiceBase extends $grpc.Service {
+  $core.String get $name => 'AudioAnalyser';
 
-  JuceEmbedGtkServiceBase() {
+  AudioAnalyserServiceBase() {
     $addMethod($grpc.ServiceMethod<$0.WindowId, $0.Void>(
         'SetWindowId',
         setWindowId_Pre,
         false,
         false,
         ($core.List<$core.int> value) => $0.WindowId.fromBuffer(value),
-        ($0.Void value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$0.Void, $0.ParameterValue>(
-        'GetParameter',
-        getParameter_Pre,
-        false,
-        false,
-        ($core.List<$core.int> value) => $0.Void.fromBuffer(value),
-        ($0.ParameterValue value) => value.writeToBuffer()));
-    $addMethod($grpc.ServiceMethod<$0.ParameterValue, $0.Void>(
-        'SetParameter',
-        setParameter_Pre,
-        false,
-        false,
-        ($core.List<$core.int> value) => $0.ParameterValue.fromBuffer(value),
         ($0.Void value) => value.writeToBuffer()));
   }
 
@@ -88,22 +56,8 @@ abstract class JuceEmbedGtkServiceBase extends $grpc.Service {
     return setWindowId(call, await request);
   }
 
-  $async.Future<$0.ParameterValue> getParameter_Pre(
-      $grpc.ServiceCall call, $async.Future<$0.Void> request) async {
-    return getParameter(call, await request);
-  }
-
-  $async.Future<$0.Void> setParameter_Pre(
-      $grpc.ServiceCall call, $async.Future<$0.ParameterValue> request) async {
-    return setParameter(call, await request);
-  }
-
   $async.Future<$0.Void> setWindowId(
       $grpc.ServiceCall call, $0.WindowId request);
-  $async.Future<$0.ParameterValue> getParameter(
-      $grpc.ServiceCall call, $0.Void request);
-  $async.Future<$0.Void> setParameter(
-      $grpc.ServiceCall call, $0.ParameterValue request);
 }
 
 @$pb.GrpcServiceName('AudioStreaming')

@@ -6,7 +6,7 @@
 //==============================================================================
 class AudioPluginAudioProcessorEditor : public juce::AudioProcessorEditor {
 public:
-  explicit AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor &);
+  explicit AudioPluginAudioProcessorEditor(AudioAnalyserAudioProcessor &);
   ~AudioPluginAudioProcessorEditor() override;
 
   //==============================================================================
@@ -16,7 +16,7 @@ public:
 private:
   // This reference is provided as a quick way for your editor to
   // access the processor object that created it.
-  AudioPluginAudioProcessor &processorRef;
+  AudioAnalyserAudioProcessor &processorRef;
 
   juce::XEmbedComponent embeddedComponent;
 

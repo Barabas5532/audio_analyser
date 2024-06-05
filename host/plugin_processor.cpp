@@ -2,7 +2,7 @@
 #include "plugin_editor.h"
 
 //==============================================================================
-AudioPluginAudioProcessor::AudioPluginAudioProcessor()
+AudioAnalyserAudioProcessor::AudioAnalyserAudioProcessor()
     : AudioProcessor(
           BusesProperties()
 #if !JucePlugin_IsMidiEffect
@@ -12,13 +12,7 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
               .withOutput("Output", juce::AudioChannelSet::stereo(), true)
 #endif
               ),
-      parameters(
-          *this, nullptr, "parameters",
-          {std::make_unique<juce::AudioParameterFloat>(
-              "gain", "Gain", juce::NormalisableRange<float>(0, 1), 0.5)}),
       server_thread(*this) {
-
-  gain = parameters.getRawParameterValue("gain");
 
   server_thread.startThread();
 
@@ -26,15 +20,16 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
       juce::File::SpecialLocationType::currentExecutableFile);
   juce::Logger::writeToLog("current path: " + current_path.getFullPathName());
 
-  auto path = current_path.getSiblingFile("audio_analyzer");
+  auto path = current_path.getSiblingFile("audio_analyser");
 
-  // XXX: Need to copy the xembed executable here manually for now
+  // XXX: Need to copy the flutter app executable here manually for now
   juce::Logger::writeToLog("path to embedded: " + path.getFullPathName());
 
   // wait for server to pick a port to run on
   grpc_server_port.wait(0);
-  auto gui_success = gui_process.start(juce::StringArray{path.getFullPathName(),
-                                      juce::String::formatted("%d", grpc_server_port.load())});
+  auto gui_success = gui_process.start(juce::StringArray{
+      path.getFullPathName(),
+      juce::String::formatted("%d", grpc_server_port.load())});
   jassert(gui_success);
 
   // Must wait here for the wID to avoid race condition where editor is created
@@ -44,11 +39,11 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
 }
 
 //==============================================================================
-const juce::String AudioPluginAudioProcessor::getName() const {
+const juce::String AudioAnalyserAudioProcessor::getName() const {
   return JucePlugin_Name;
 }
 
-bool AudioPluginAudioProcessor::acceptsMidi() const {
+bool AudioAnalyserAudioProcessor::acceptsMidi() const {
 #if JucePlugin_WantsMidiInput
   return true;
 #else
@@ -56,7 +51,7 @@ bool AudioPluginAudioProcessor::acceptsMidi() const {
 #endif
 }
 
-bool AudioPluginAudioProcessor::producesMidi() const {
+bool AudioAnalyserAudioProcessor::producesMidi() const {
 #if JucePlugin_ProducesMidiOutput
   return true;
 #else
@@ -64,7 +59,7 @@ bool AudioPluginAudioProcessor::producesMidi() const {
 #endif
 }
 
-bool AudioPluginAudioProcessor::isMidiEffect() const {
+bool AudioAnalyserAudioProcessor::isMidiEffect() const {
 #if JucePlugin_IsMidiEffect
   return true;
 #else
@@ -72,45 +67,45 @@ bool AudioPluginAudioProcessor::isMidiEffect() const {
 #endif
 }
 
-double AudioPluginAudioProcessor::getTailLengthSeconds() const { return 0.0; }
+double AudioAnalyserAudioProcessor::getTailLengthSeconds() const { return 0.0; }
 
-int AudioPluginAudioProcessor::getNumPrograms() {
+int AudioAnalyserAudioProcessor::getNumPrograms() {
   return 1; // NB: some hosts don't cope very well if you tell them there are 0
             // programs,
   // so this should be at least 1, even if you're not really implementing
   // programs.
 }
 
-int AudioPluginAudioProcessor::getCurrentProgram() { return 0; }
+int AudioAnalyserAudioProcessor::getCurrentProgram() { return 0; }
 
-void AudioPluginAudioProcessor::setCurrentProgram(int index) {
+void AudioAnalyserAudioProcessor::setCurrentProgram(int index) {
   juce::ignoreUnused(index);
 }
 
-const juce::String AudioPluginAudioProcessor::getProgramName(int index) {
+const juce::String AudioAnalyserAudioProcessor::getProgramName(int index) {
   juce::ignoreUnused(index);
   return {};
 }
 
-void AudioPluginAudioProcessor::changeProgramName(int index,
-                                                  const juce::String &newName) {
+void AudioAnalyserAudioProcessor::changeProgramName(
+    int index, const juce::String &newName) {
   juce::ignoreUnused(index, newName);
 }
 
 //==============================================================================
-void AudioPluginAudioProcessor::prepareToPlay(double sampleRate,
-                                              int samplesPerBlock) {
+void AudioAnalyserAudioProcessor::prepareToPlay(double sampleRate,
+                                                int samplesPerBlock) {
   // Use this method as the place to do any pre-playback
   // initialisation that you need..
   juce::ignoreUnused(sampleRate, samplesPerBlock);
 }
 
-void AudioPluginAudioProcessor::releaseResources() {
+void AudioAnalyserAudioProcessor::releaseResources() {
   // When playback stops, you can use this as an opportunity to free up any
   // spare memory, etc.
 }
 
-bool AudioPluginAudioProcessor::isBusesLayoutSupported(
+bool AudioAnalyserAudioProcessor::isBusesLayoutSupported(
     const BusesLayout &layouts) const {
 #if JucePlugin_IsMidiEffect
   juce::ignoreUnused(layouts);
@@ -134,39 +129,29 @@ bool AudioPluginAudioProcessor::isBusesLayoutSupported(
 #endif
 }
 
-void AudioPluginAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
-                                             juce::MidiBuffer &midiMessages) {
-  juce::ignoreUnused(midiMessages);
-
+void AudioAnalyserAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
+                                               juce::MidiBuffer &) {
   juce::ScopedNoDenormals noDenormals;
-  auto totalNumOutputChannels = getTotalNumOutputChannels();
-
-  float currentGain = *gain * 0.1;
-
-  for (int channel = 0; channel < totalNumOutputChannels; ++channel) {
-    auto *channelData = buffer.getWritePointer(channel);
-    for (auto sample = 0; sample < buffer.getNumSamples(); ++sample)
-      channelData[sample] = random.nextFloat() * currentGain * 2 - currentGain;
-  }
 
   auto samples = buffer.getReadPointer(0);
-  for(int i = 0; i < buffer.getNumSamples(); i++)
-  {
+  for (int i = 0; i < buffer.getNumSamples(); i++) {
     queue.push(samples[i]);
   }
+
+  buffer.clear();
 }
 
 //==============================================================================
-bool AudioPluginAudioProcessor::hasEditor() const {
+bool AudioAnalyserAudioProcessor::hasEditor() const {
   return true; // (change this to false if you choose to not supply an editor)
 }
 
-juce::AudioProcessorEditor *AudioPluginAudioProcessor::createEditor() {
+juce::AudioProcessorEditor *AudioAnalyserAudioProcessor::createEditor() {
   return new AudioPluginAudioProcessorEditor(*this);
 }
 
 //==============================================================================
-void AudioPluginAudioProcessor::getStateInformation(
+void AudioAnalyserAudioProcessor::getStateInformation(
     juce::MemoryBlock &destData) {
   // You should use this method to store your parameters in the memory block.
   // You could do that either as raw data, or use the XML or ValueTree classes
@@ -174,8 +159,8 @@ void AudioPluginAudioProcessor::getStateInformation(
   juce::ignoreUnused(destData);
 }
 
-void AudioPluginAudioProcessor::setStateInformation(const void *data,
-                                                    int sizeInBytes) {
+void AudioAnalyserAudioProcessor::setStateInformation(const void *data,
+                                                      int sizeInBytes) {
   // You should use this method to restore your parameters from this memory
   // block, whose contents will have been created by the getStateInformation()
   // call.
@@ -185,5 +170,5 @@ void AudioPluginAudioProcessor::setStateInformation(const void *data,
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter() {
-  return new AudioPluginAudioProcessor();
+  return new AudioAnalyserAudioProcessor();
 }

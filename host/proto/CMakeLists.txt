@@ -1,12 +1,12 @@
 # Proto file
-get_filename_component(proto_file "juce_embed_gtk.proto" ABSOLUTE)
+get_filename_component(proto_file "audio_analyser.proto" ABSOLUTE)
 get_filename_component(proto_path "${proto_file}" PATH)
 
 # Generated sources
-set(proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/juce_embed_gtk.pb.cc")
-set(proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/juce_embed_gtk.pb.h")
-set(grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/juce_embed_gtk.grpc.pb.cc")
-set(grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/juce_embed_gtk.grpc.pb.h")
+set(proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/audio_analyser.pb.cc")
+set(proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/audio_analyser.pb.h")
+set(grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/audio_analyser.grpc.pb.cc")
+set(grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/audio_analyser.grpc.pb.h")
 add_custom_command(
         OUTPUT "${proto_srcs}" "${proto_hdrs}" "${grpc_srcs}" "${grpc_hdrs}"
         COMMAND $<TARGET_FILE:protobuf::protoc>
@@ -17,13 +17,13 @@ add_custom_command(
         "${proto_file}"
         DEPENDS "${proto_file}")
 
-add_library(juce_embed_gtk_proto STATIC)
-add_library(juce_embed_gtk::proto ALIAS juce_embed_gtk_proto)
+add_library(audio_analyser_proto STATIC)
+add_library(audio_analyser::proto ALIAS audio_analyser_proto)
 
-target_include_directories(juce_embed_gtk_proto PUBLIC "${CMAKE_CURRENT_BINARY_DIR}")
-target_sources(juce_embed_gtk_proto PRIVATE "${proto_srcs}" "${grpc_srcs}")
+target_include_directories(audio_analyser_proto PUBLIC "${CMAKE_CURRENT_BINARY_DIR}")
+target_sources(audio_analyser_proto PRIVATE "${proto_srcs}" "${grpc_srcs}")
 
-target_link_libraries(juce_embed_gtk_proto PUBLIC
+target_link_libraries(audio_analyser_proto PUBLIC
                       grpc++
                       grpc++_reflection
                       libprotobuf

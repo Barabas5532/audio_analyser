@@ -1,19 +1,13 @@
 syntax = "proto3";
 
-service JuceEmbedGtk {
+service AudioAnalyser {
   rpc SetWindowId(WindowId) returns (Void) {}
-  rpc GetParameter(Void) returns (ParameterValue) {}
-  rpc SetParameter(ParameterValue) returns (Void) {}
 }
 
 message Void {}
 
 message WindowId {
   uint64 id = 1;
-}
-
-message ParameterValue {
-  float value = 1;
 }
 
 service AudioStreaming {

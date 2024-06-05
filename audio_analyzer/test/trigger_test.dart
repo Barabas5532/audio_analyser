@@ -1,4 +1,4 @@
-import 'package:audio_analyzer/trigger.dart';
+import 'package:audio_analyser/trigger.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

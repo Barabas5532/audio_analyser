@@ -1,6 +1,6 @@
 //
 //  Generated code. Do not modify.
-//  source: juce_embed_gtk.proto
+//  source: audio_analyser.proto
 //
 // @dart = 2.12
 
@@ -108,66 +108,6 @@ class WindowId extends $pb.GeneratedMessage {
   $core.bool hasId() => $_has(0);
   @$pb.TagNumber(1)
   void clearId() => clearField(1);
-}
-
-class ParameterValue extends $pb.GeneratedMessage {
-  factory ParameterValue({
-    $core.double? value,
-  }) {
-    final $result = create();
-    if (value != null) {
-      $result.value = value;
-    }
-    return $result;
-  }
-  ParameterValue._() : super();
-  factory ParameterValue.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(i, r);
-  factory ParameterValue.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'ParameterValue',
-      createEmptyInstance: create)
-    ..a<$core.double>(1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.OF)
-    ..hasRequiredFields = false;
-
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-      'Will be removed in next major version')
-  ParameterValue clone() => ParameterValue()..mergeFromMessage(this);
-  @$core.Deprecated('Using this can add significant overhead to your binary. '
-      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-      'Will be removed in next major version')
-  ParameterValue copyWith(void Function(ParameterValue) updates) =>
-      super.copyWith((message) => updates(message as ParameterValue))
-          as ParameterValue;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static ParameterValue create() => ParameterValue._();
-  ParameterValue createEmptyInstance() => create();
-  static $pb.PbList<ParameterValue> createRepeated() =>
-      $pb.PbList<ParameterValue>();
-  @$core.pragma('dart2js:noInline')
-  static ParameterValue getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<ParameterValue>(create);
-  static ParameterValue? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.double get value => $_getN(0);
-  @$pb.TagNumber(1)
-  set value($core.double v) {
-    $_setFloat(0, v);
-  }
-
-  @$pb.TagNumber(1)
-  $core.bool hasValue() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearValue() => clearField(1);
 }
 
 class AudioBuffer extends $pb.GeneratedMessage {
