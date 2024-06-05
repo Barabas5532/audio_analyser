@@ -4,7 +4,6 @@ import 'dart:math' as m;
 import 'trigger.dart';
 import 'package:logging/logging.dart';
 
-
 final _log = Logger('fake_audio_engine');
 
 class FakeAudioEngine {
@@ -12,8 +11,8 @@ class FakeAudioEngine {
     final bufferPeriodMs = bufferSize / sampleRate * 1000;
     _log.info('Timer period: $bufferPeriodMs ms');
 
-    timer = Timer.periodic(
-        Duration(milliseconds: bufferPeriodMs.toInt()), (_) => _generateBuffer());
+    timer = Timer.periodic(Duration(milliseconds: bufferPeriodMs.toInt()),
+        (_) => _generateBuffer());
   }
 
   void Function(AudioBuffer buffer) process;
@@ -49,7 +48,7 @@ class _SineGenerator {
     for (var i = 0; i < count; i++) {
       phase += increment;
 
-      if(phase > 2 * m.pi) {
+      if (phase > 2 * m.pi) {
         phase -= 2 * m.pi;
       }
 

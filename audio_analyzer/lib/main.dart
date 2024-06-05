@@ -1,8 +1,18 @@
+import 'dart:developer';
+import 'dart:io';
+
+import 'package:provider/provider.dart';
+
+import 'rate_counter.dart';
 import 'audio_plot.dart';
+import 'embedding/juce_connection.dart';
+import 'embedding/native_platform_method_channel.dart';
+import 'embedding/proto/generated/juce_embed_gtk.pbgrpc.dart' as grpc;
 import 'trigger.dart';
 import 'fake_audio_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
+import 'package:grpc/grpc.dart' as grpc;
 import 'dart:math' as m;
 
 const _kXAxisSize = 39.0;
@@ -10,11 +20,88 @@ const _kYAxisSize = 67.0;
 
 final _log = Logger('main');
 
-void main() {
-  Logger.root.onRecord.listen((record) => debugPrint(record.toString()));
-  Logger.root.level = Level.ALL;
+class FakeBackend extends ChangeNotifier implements AudioBackend {
+  FakeBackend() {
+    Future.delayed(const Duration(seconds: 2), () {
+      _gain = 0.5;
+      notifyListeners();
+    });
+  }
 
-  runApp(const MyApp());
+  @override
+  Future<void> sendWindowId(int id) async => Future<void>.value();
+
+  double? _gain;
+
+  @override
+  set gain(double? gain) {
+    _gain = gain;
+    notifyListeners();
+  }
+
+  @override
+  double? get gain => _gain;
+}
+
+void main(List<String> args) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final logSink = File("/tmp/xembed-logs").openWrite();
+
+  Logger.root.level = Level.ALL;
+  Logger.root.onRecord.listen((record) {
+    final message = '${record.level.name}: ${record.time}: ${record.message}';
+
+    debugPrint(message);
+    logSink.write(message);
+    logSink.write('\n');
+  });
+
+  _log.info((await Service.getInfo()).serverUri);
+
+  _log.info(args);
+
+  final port = (1 == args.length) ? int.tryParse(args.single) : null;
+
+  late AudioBackend backend;
+  if (port != null) {
+    final native = NativePlatformMethodChannel();
+    final wId = await native.getWindowId();
+
+    _log.info("wId = $wId");
+
+    final channel = grpc.ClientChannel(
+      'localhost',
+      port: port,
+      options: grpc.ChannelOptions(
+        credentials: const grpc.ChannelCredentials.insecure(),
+        codecRegistry: grpc.CodecRegistry(
+            codecs: [const grpc.GzipCodec(), const grpc.IdentityCodec()]),
+      ),
+    );
+    final client = grpc.JuceEmbedGtkClient(channel);
+
+    final streamingClient = grpc.AudioStreamingClient(channel);
+
+    final rateCounter = RateCounter();
+    rateCounter.rateStream.listen(
+      (rate) => _log.info('Audio block rate: $rate Hz'),
+    );
+    streamingClient.getAudioStream(grpc.Void()).listen(
+      (_) {
+        rateCounter.tick();
+      },
+    );
+
+    backend = AudioBackend(client: client)..sendWindowId(wId);
+  } else {
+    backend = FakeBackend();
+  }
+
+  _log.info("app starting");
+
+  runApp(MultiProvider(providers: [
+    ChangeNotifierProvider<AudioBackend>.value(value: backend),
+  ], child: const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -30,7 +117,12 @@ class MyApp extends StatelessWidget {
       ),
       home: const Scaffold(
         body: Center(
-          child: AudioPlotExample(),
+          child: Column(
+            children: [
+              Flexible(child: AudioPlotExample()),
+              Flexible(child: GainPage()),
+            ],
+          ),
         ),
       ),
     );
@@ -120,7 +212,8 @@ class _AudioPlotExampleState extends State<AudioPlotExample> {
 
   @override
   Widget build(BuildContext context) {
-    final xPoints = waveform?.indexed.map((e) => xAxis.minimum + e.$1 / rate ) ?? [];
+    final xPoints =
+        waveform?.indexed.map((e) => xAxis.minimum + e.$1 / rate) ?? [];
     final yPoints = waveform ?? [];
 
     return LayoutBuilder(
@@ -150,11 +243,11 @@ class _AudioPlotExampleState extends State<AudioPlotExample> {
 
   void translateXAxis(double dx) {
     // do not allow moving the trigger point out of the screen
-    if(xAxis.minimum - dx > 0) {
-        dx = xAxis.minimum;
+    if (xAxis.minimum - dx > 0) {
+      dx = xAxis.minimum;
     }
 
-    if(xAxis.maximum - dx < 0) {
+    if (xAxis.maximum - dx < 0) {
       dx = xAxis.maximum;
     }
 
@@ -206,7 +299,8 @@ class _AudioPlotExampleState extends State<AudioPlotExample> {
       trigger.setScreenBufferSize(screenBufferSize);
     }
 
-    final postTriggerBufferSize = (screenBufferSize * (1 - triggerRatio)).toInt();
+    final postTriggerBufferSize =
+        (screenBufferSize * (1 - triggerRatio)).toInt();
     if (lastPostTriggerBufferSize != postTriggerBufferSize) {
       _log.info('update post trigger $postTriggerBufferSize');
 
@@ -214,12 +308,10 @@ class _AudioPlotExampleState extends State<AudioPlotExample> {
       trigger.setPostTriggerBufferSize(postTriggerBufferSize);
     }
 
-    if(iter > 100)
-    {
+    if (iter > 100) {
       iter = 0;
       _log.info('screen $screenBufferSize post trigger $postTriggerBufferSize');
-    }
-    else {
+    } else {
       iter++;
     }
     trigger.process(buffer);
@@ -232,16 +324,16 @@ class _AudioPlotExampleState extends State<AudioPlotExample> {
 
 extension DoubleMagnitudeEx on double {
   NumberMagnitude get magnitude => switch (abs()) {
-  final a when a >= 1e9 => NumberMagnitude.larger,
-  final a when a >= 1e6 => NumberMagnitude.mega,
-  final a when a >= 1e3 => NumberMagnitude.kilo,
-  final a when a >= 1e0 => NumberMagnitude.base,
-  final a when a >= 1e-3 => NumberMagnitude.milli,
-  final a when a >= 1e-6 => NumberMagnitude.micro,
-  final a when a >= 1e-9 => NumberMagnitude.nano,
-  final a when a >= 1e-12 => NumberMagnitude.pico,
-  _ => NumberMagnitude.larger,
-  };
+        final a when a >= 1e9 => NumberMagnitude.larger,
+        final a when a >= 1e6 => NumberMagnitude.mega,
+        final a when a >= 1e3 => NumberMagnitude.kilo,
+        final a when a >= 1e0 => NumberMagnitude.base,
+        final a when a >= 1e-3 => NumberMagnitude.milli,
+        final a when a >= 1e-6 => NumberMagnitude.micro,
+        final a when a >= 1e-9 => NumberMagnitude.nano,
+        final a when a >= 1e-12 => NumberMagnitude.pico,
+        _ => NumberMagnitude.larger,
+      };
 }
 
 extension DoubleLabelFormatEx on double {
@@ -327,4 +419,18 @@ String formatTick(double value, NumberMagnitude magnitude) {
     -1.0 => '-$number',
     _ => number,
   };
+}
+
+class GainPage extends StatelessWidget {
+  const GainPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final backend = context.watch<AudioBackend>();
+
+    return Slider(
+      value: backend.gain ?? 0,
+      onChanged: backend.gain == null ? null : (v) => backend.gain = v,
+    );
+  }
 }
