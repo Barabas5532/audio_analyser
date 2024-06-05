@@ -1,8 +1,6 @@
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:provider/provider.dart';
-
 import 'rate_counter.dart';
 import 'audio_plot.dart';
 import 'embedding/juce_connection.dart';
@@ -81,13 +79,19 @@ void main(List<String> args) async {
 
   _log.info("app starting");
 
-  runApp(MultiProvider(providers: [
-    ChangeNotifierProvider<AudioBackend>.value(value: backend),
-  ], child: const MyApp()));
+  const rate = 48000.0;
+  const bufferSize = 512;
+  runApp(MyApp(
+    engine: FakeAudioEngine(rate, bufferSize),
+    rate: rate,
+  ));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, required this.engine, required this.rate});
+
+  final AudioEngineBase engine;
+  final double rate;
 
   @override
   Widget build(BuildContext context) {
@@ -101,29 +105,27 @@ class MyApp extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Audio Analyser'),
         ),
-        body: const AudioPlotExample(),
+        body: AudioPlotExample(rate: rate, engine: engine),
       ),
     );
   }
 }
 
 class AudioPlotExample extends StatefulWidget {
-  const AudioPlotExample({super.key});
+  const AudioPlotExample({super.key, required this.engine, required this.rate});
+
+  final AudioEngineBase engine;
+  final double rate;
 
   @override
   State<AudioPlotExample> createState() => _AudioPlotExampleState();
 }
 
 class _AudioPlotExampleState extends State<AudioPlotExample> {
-  static const rate = 48000.0;
-  static const bufferSize = 512;
-
   final trigger = Trigger();
 
   int lastScreenBufferSize = 0;
   int lastPostTriggerBufferSize = 0;
-
-  late final FakeAudioEngine engine;
 
   List<double>? waveform;
 
@@ -131,7 +133,7 @@ class _AudioPlotExampleState extends State<AudioPlotExample> {
   void initState() {
     super.initState();
 
-    engine = FakeAudioEngine(rate, bufferSize)..audio.listen(_process);
+    widget.engine.audio.listen(_process);
 
     trigger.triggered.listen((event) {
       setState(() {
@@ -144,7 +146,7 @@ class _AudioPlotExampleState extends State<AudioPlotExample> {
   void dispose() {
     super.dispose();
 
-    engine.dispose();
+    widget.engine.dispose();
     trigger.dispose();
   }
 
@@ -191,7 +193,7 @@ class _AudioPlotExampleState extends State<AudioPlotExample> {
   @override
   Widget build(BuildContext context) {
     final xPoints =
-        waveform?.indexed.map((e) => xAxis.minimum + e.$1 / rate) ?? [];
+        waveform?.indexed.map((e) => xAxis.minimum + e.$1 / widget.rate) ?? [];
     final yPoints = waveform ?? [];
 
     return LayoutBuilder(
@@ -269,7 +271,7 @@ class _AudioPlotExampleState extends State<AudioPlotExample> {
   }
 
   void _process(AudioBuffer buffer) {
-    final screenBufferSize = (xAxis.range * rate).toInt();
+    final screenBufferSize = (xAxis.range * widget.rate).toInt();
     if (lastScreenBufferSize != screenBufferSize) {
       _log.info('update screen $screenBufferSize');
 
