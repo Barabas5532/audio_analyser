@@ -44,10 +44,13 @@ public:
   void setStateInformation(const void *data, int sizeInBytes) override;
 
   GrpcServerThread server_thread;
-  std::atomic<unsigned long> wId;
   std::atomic<int> grpc_server_port;
   juce::ChildProcess gui_process;
   AudioQueue queue;
+
+#if AUDIO_ANALYSER_ENABLE_EMBEDDING
+  std::atomic<unsigned long> wId;
+#endif
 
 private:
   //==============================================================================

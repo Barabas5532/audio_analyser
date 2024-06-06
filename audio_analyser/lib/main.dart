@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'rate_counter.dart';
 import 'audio_plot.dart';
-import 'embedding/juce_connection.dart';
 import 'embedding/native_platform_method_channel.dart';
 import 'embedding/proto/generated/audio_analyser.pbgrpc.dart' as grpc;
 import 'trigger.dart';
@@ -17,11 +16,6 @@ const _kXAxisSize = 39.0;
 const _kYAxisSize = 67.0;
 
 final _log = Logger('main');
-
-class FakeBackend extends ChangeNotifier implements AudioBackend {
-  @override
-  Future<void> sendWindowId(int id) async => Future<void>.value();
-}
 
 void main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,19 +34,21 @@ void main(List<String> args) async {
 
   _log.info(args);
 
-  final port = (1 == args.length) ? int.tryParse(args.single) : null;
+  final port = int.tryParse(const String.fromEnvironment("BACKEND_PORT")) ??
+      ((1 == args.length) ? int.tryParse(args.single) : null);
 
-  late AudioBackend backend;
   late AudioEngineBase audioEngine;
 
   // TODO get rate from backend
   const rate = 48000.0;
 
   if (port != null) {
+    /*
     final native = NativePlatformMethodChannel();
     final wId = await native.getWindowId();
 
     _log.info("wId = $wId");
+     */
 
     final channel = grpc.ClientChannel(
       'localhost',
@@ -63,14 +59,15 @@ void main(List<String> args) async {
             codecs: [const grpc.GzipCodec(), const grpc.IdentityCodec()]),
       ),
     );
+
+    /*
     final client = grpc.AudioAnalyserClient(channel);
-    backend = AudioBackend(client: client)..sendWindowId(wId);
+    AudioBackend(client: client).sendWindowId(wId);
+     */
 
     final streamingClient = grpc.AudioStreamingClient(channel);
     audioEngine = AudioEngine(client: streamingClient);
   } else {
-    backend = FakeBackend();
-
     const bufferSize = 512;
     audioEngine = FakeAudioEngine(rate, bufferSize);
   }
@@ -140,7 +137,7 @@ class _AudioPlotExampleState extends State<AudioPlotExample> {
     });
 
     rateCounter.rateStream.listen(
-          (rate) => _log.info('Audio block rate: $rate Hz'),
+      (rate) => _log.info('Audio block rate: $rate Hz'),
     );
   }
 

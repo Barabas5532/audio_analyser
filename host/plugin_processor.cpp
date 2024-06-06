@@ -16,6 +16,7 @@ AudioAnalyserAudioProcessor::AudioAnalyserAudioProcessor()
 
   server_thread.startThread();
 
+#if AUDIO_ANALYSER_ENABLE_EMBEDDING
   auto current_path = juce::File::getSpecialLocation(
       juce::File::SpecialLocationType::currentExecutableFile);
   juce::Logger::writeToLog("current path: " + current_path.getFullPathName());
@@ -36,6 +37,7 @@ AudioAnalyserAudioProcessor::AudioAnalyserAudioProcessor()
   // before it is set.
   wId.wait(0);
   juce::Logger::writeToLog("Got wId, returning from constructor");
+#endif
 }
 
 //==============================================================================

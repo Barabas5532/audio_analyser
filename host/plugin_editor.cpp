@@ -4,10 +4,17 @@
 //==============================================================================
 AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(
     AudioAnalyserAudioProcessor &p)
-    : AudioProcessorEditor(&p), processorRef(p),
-      embeddedComponent(atomic_load(&this->processorRef.wId)) {
+    : AudioProcessorEditor(&p), processorRef(p)
+#if AUDIO_ANALYSER_ENABLE_EMBEDDING
+      ,
+      embeddedComponent(atomic_load(&this->processorRef.wId))
+#endif
+{
   juce::Logger::writeToLog("Constructing editor");
+
+#if AUDIO_ANALYSER_ENABLE_EMBEDDING
   addAndMakeVisible(&embeddedComponent);
+#endif
 
   // Make sure that before the constructor has finished, you've set the
   // editor's size to whatever you need it to be.
@@ -25,5 +32,7 @@ void AudioPluginAudioProcessorEditor::paint(juce::Graphics &g) {
 }
 
 void AudioPluginAudioProcessorEditor::resized() {
+#if AUDIO_ANALYSER_ENABLE_EMBEDDING
   embeddedComponent.setBounds(getLocalBounds());
+#endif
 }

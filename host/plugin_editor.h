@@ -18,7 +18,9 @@ private:
   // access the processor object that created it.
   AudioAnalyserAudioProcessor &processorRef;
 
+#if AUDIO_ANALYSER_ENABLE_EMBEDDING
   juce::XEmbedComponent embeddedComponent;
+#endif
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioPluginAudioProcessorEditor)
 };

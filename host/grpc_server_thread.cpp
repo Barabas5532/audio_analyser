@@ -2,9 +2,13 @@
 #include "audio_queue.h"
 #include "audio_analyser.grpc.pb.h"
 #include "plugin_processor.h"
-#include <cinttypes>
 #include <grpcpp/server_builder.h>
 
+#if AUDIO_ANALYSER_ENABLE_EMBEDDING
+#include <cinttypes>
+#endif
+
+#if AUDIO_ANALYSER_ENABLE_EMBEDDING
 class AudioAnalyserImpl final : public AudioAnalyser::Service {
 public:
   explicit AudioAnalyserImpl(AudioAnalyserAudioProcessor &a_processor)
@@ -25,6 +29,7 @@ public:
 private:
   AudioAnalyserAudioProcessor &processor;
 };
+#endif
 
 class AudioStreamingImpl final : public AudioStreaming::Service,
                                  private juce::Timer {
@@ -88,16 +93,19 @@ private:
 };
 
 void GrpcServerThread::run() {
-  auto service = AudioAnalyserImpl{processor};
   auto audio_streaming_service = AudioStreamingImpl{processor.queue};
 
-  std::string server_address{"localhost:0"};
+  // TODO CMake config for port
+  std::string server_address{"localhost:8080"};
   int port = 0;
 
   grpc::ServerBuilder builder;
   builder.AddListeningPort(server_address, grpc::InsecureServerCredentials(),
                            &port);
+#if AUDIO_ANALYSER_ENABLE_EMBEDDING
+  auto service = AudioAnalyserImpl{processor};
   builder.RegisterService(&service);
+#endif
   builder.RegisterService(&audio_streaming_service);
   auto cq = builder.AddCompletionQueue();
   auto server = builder.BuildAndStart();
