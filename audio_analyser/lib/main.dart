@@ -43,6 +43,11 @@ void main(List<String> args) async {
   final port = (1 == args.length) ? int.tryParse(args.single) : null;
 
   late AudioBackend backend;
+  late AudioEngineBase audioEngine;
+
+  // TODO get rate from backend
+  const rate = 48000.0;
+
   if (port != null) {
     final native = NativePlatformMethodChannel();
     final wId = await native.getWindowId();
@@ -59,30 +64,21 @@ void main(List<String> args) async {
       ),
     );
     final client = grpc.AudioAnalyserClient(channel);
+    backend = AudioBackend(client: client)..sendWindowId(wId);
 
     final streamingClient = grpc.AudioStreamingClient(channel);
-
-    final rateCounter = RateCounter();
-    rateCounter.rateStream.listen(
-      (rate) => _log.info('Audio block rate: $rate Hz'),
-    );
-    streamingClient.getAudioStream(grpc.Void()).listen(
-      (_) {
-        rateCounter.tick();
-      },
-    );
-
-    backend = AudioBackend(client: client)..sendWindowId(wId);
+    audioEngine = AudioEngine(client: streamingClient);
   } else {
     backend = FakeBackend();
+
+    const bufferSize = 512;
+    audioEngine = FakeAudioEngine(rate, bufferSize);
   }
 
   _log.info("app starting");
 
-  const rate = 48000.0;
-  const bufferSize = 512;
   runApp(MyApp(
-    engine: FakeAudioEngine(rate, bufferSize),
+    engine: audioEngine,
     rate: rate,
   ));
 }
@@ -129,6 +125,8 @@ class _AudioPlotExampleState extends State<AudioPlotExample> {
 
   List<double>? waveform;
 
+  final rateCounter = RateCounter();
+
   @override
   void initState() {
     super.initState();
@@ -140,6 +138,10 @@ class _AudioPlotExampleState extends State<AudioPlotExample> {
         waveform = event;
       });
     });
+
+    rateCounter.rateStream.listen(
+          (rate) => _log.info('Audio block rate: $rate Hz'),
+    );
   }
 
   @override
@@ -271,6 +273,8 @@ class _AudioPlotExampleState extends State<AudioPlotExample> {
   }
 
   void _process(AudioBuffer buffer) {
+    rateCounter.tick();
+
     final screenBufferSize = (xAxis.range * widget.rate).toInt();
     if (lastScreenBufferSize != screenBufferSize) {
       _log.info('update screen $screenBufferSize');
