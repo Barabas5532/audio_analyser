@@ -3,6 +3,7 @@ import 'dart:math' as m;
 
 import 'package:audio_analyser/embedding/proto/generated/audio_analyser.pbgrpc.dart'
     as grpc;
+import 'package:flutter/foundation.dart';
 
 import 'trigger.dart';
 import 'package:logging/logging.dart';
@@ -22,7 +23,7 @@ class AudioEngine implements AudioEngineBase {
 
   @override
   Stream<AudioBuffer> get audio =>
-      client.getAudioStream(grpc.Void()).map((event) => event.samples);
+      client.getAudioStream(grpc.Void()).map((event) { debugPrint(event.toString()); return event;},).map((event) => event.samples);
 
   @override
   void dispose() {}

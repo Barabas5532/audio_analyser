@@ -1,6 +1,6 @@
 #include "grpc_server_thread.h"
-#include "audio_queue.h"
 #include "audio_analyser.grpc.pb.h"
+#include "audio_queue.h"
 #include "plugin_processor.h"
 #include <grpcpp/server_builder.h>
 
@@ -31,50 +31,88 @@ private:
 };
 #endif
 
-class AudioStreamingImpl final : public AudioStreaming::Service,
+class AudioStreamingImpl final : public AudioStreaming::CallbackService,
                                  private juce::Timer {
 public:
-  explicit AudioStreamingImpl(AudioQueue &a_queue) : queue{a_queue}  { startTimerHz(100); }
+  explicit AudioStreamingImpl(AudioQueue &a_queue) : queue{a_queue} {
+    startTimerHz(100);
+  }
 
-  grpc::Status
-  GetAudioStream(::grpc::ServerContext *context, const ::Void *request,
-                 ::grpc::ServerWriter<::AudioBuffer> *writer) override {
-    // TODO add support for multiple clients
-    // register thread safe queue stream with the audio app at runtime
-    // 
-    // This version uses a single hardcoded audio sample queue, that works as
-    // long as there is a only a single audio stream running at once.
+  ::grpc::ServerWriteReactor<::AudioBuffer> *
+  GetAudioStream(::grpc::CallbackServerContext *context,
+                 const ::Void *request) {
+    class Reactor : public grpc::ServerWriteReactor<::AudioBuffer> {
+    public:
+      Reactor(AudioQueue &a_queue) : queue{a_queue} {
+        // TODO add support for multiple clients
+        // register thread safe queue stream with the audio app at runtime
+        //
+        // This version uses a single hardcoded audio sample queue, that works
+        // as long as there is a only a single audio stream running at once.
 
-    int state_copy = 0;
-    {
-      std::lock_guard lock{mutex};
-      state_copy = state;
-    }
+        juce::Logger::outputDebugString("construct Reactor");
+        {
+          std::lock_guard lock{mutex};
+          state_copy = state;
+        }
 
-    queue.reset();
-    
-    while (!context->IsCancelled()) {
-      {
-        std::unique_lock lock{mutex};
-        cv.wait(lock, [&]() -> bool {
-          if (state_copy == state) {
-            // spurious wakeup
-            return false;
+        juce::Logger::outputDebugString("queue reset");
+        queue.reset();
+
+        juce::Logger::outputDebugString("first write");
+        NextWrite();
+      }
+      
+      void OnDone() override { delete this; }
+      
+      void OnWriteDone(bool /*ok*/) override {
+        juce::Logger::outputDebugString("Reactor OnWriteDone");
+        NextWrite();
+      }
+
+      void OnCancel() override {
+        juce::Logger::outputDebugString("Reactor OnCancel");
+      }
+
+    private:
+      void NextWrite() {
+        // TODO probably should not block here, but don't see how to notify the
+        // reactor to start the next write asynchronously
+
+        while (true) {
+          juce::Logger::outputDebugString("waiting for notify");
+          {
+            std::unique_lock lock{mutex};
+            cv.wait(lock, [&]() -> bool {
+              if (state_copy == state) {
+                // spurious wakeup
+                return false;
+              }
+
+              state_copy = state;
+              return true;
+            });
           }
 
-          state_copy = state;
-          return true;
-        });
+          juce::Logger::outputDebugString("buffer send");
+          message = ::AudioBuffer();
+          float sample;
+          while (queue.pop(sample)) {
+            message.add_samples(sample);
+          }
+
+          juce::Logger::outputDebugString("sample count=" + juce::String(message.samples().size()));
+          StartWrite(&message);
+        }
       }
 
-      auto message = ::AudioBuffer();
-      float sample;
-      while (queue.pop(sample)) {
-        message.add_samples(sample);
-      }
+      int state_copy = 0;
+      AudioBuffer message;
+      AudioQueue &queue;
+    };
 
-      writer->Write(message);
-    }
+    juce::Logger::outputDebugString("stream starting");
+    return new Reactor(queue);
   }
 
 private:
@@ -85,12 +123,16 @@ private:
     cv.notify_all();
   }
 
-  std::mutex mutex;
-  std::condition_variable cv;
-  int state{};
+  static std::mutex mutex;
+  static std::condition_variable cv;
+  static int state;
 
   AudioQueue &queue;
 };
+
+std::mutex AudioStreamingImpl::mutex{};
+std::condition_variable AudioStreamingImpl::cv{};
+int AudioStreamingImpl::state{};
 
 void GrpcServerThread::run() {
   auto audio_streaming_service = AudioStreamingImpl{processor.queue};
@@ -107,8 +149,7 @@ void GrpcServerThread::run() {
   builder.RegisterService(&service);
 #endif
   builder.RegisterService(&audio_streaming_service);
-  auto cq = builder.AddCompletionQueue();
-  auto server = builder.BuildAndStart();
+  std::unique_ptr<grpc::Server> server{builder.BuildAndStart()};
 
   juce::Logger::outputDebugString(
       juce::String::formatted("gRPC server started on port %d", port));
