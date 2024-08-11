@@ -52,8 +52,8 @@ public:
     }
 
     queue.reset();
-
-    while (true) {
+    
+    while (!context->IsCancelled()) {
       {
         std::unique_lock lock{mutex};
         cv.wait(lock, [&]() -> bool {
