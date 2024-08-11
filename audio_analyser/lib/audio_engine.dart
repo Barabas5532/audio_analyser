@@ -23,7 +23,7 @@ class AudioEngine implements AudioEngineBase {
 
   @override
   Stream<AudioBuffer> get audio =>
-      client.getAudioStream(grpc.Void()).map((event) { debugPrint(event.toString()); return event;},).map((event) => event.samples);
+      client.getAudioStream(grpc.Void()).map((event) => event.samples);
 
   @override
   void dispose() {}

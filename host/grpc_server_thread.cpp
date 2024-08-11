@@ -62,9 +62,9 @@ public:
         juce::Logger::outputDebugString("first write");
         NextWrite();
       }
-      
+
       void OnDone() override { delete this; }
-      
+
       void OnWriteDone(bool /*ok*/) override {
         juce::Logger::outputDebugString("Reactor OnWriteDone");
         NextWrite();
@@ -79,31 +79,30 @@ public:
         // TODO probably should not block here, but don't see how to notify the
         // reactor to start the next write asynchronously
 
-        while (true) {
-          juce::Logger::outputDebugString("waiting for notify");
-          {
-            std::unique_lock lock{mutex};
-            cv.wait(lock, [&]() -> bool {
-              if (state_copy == state) {
-                // spurious wakeup
-                return false;
-              }
+        juce::Logger::outputDebugString("waiting for notify");
+        {
+          std::unique_lock lock{mutex};
+          cv.wait(lock, [&]() -> bool {
+            if (state_copy == state) {
+              // spurious wakeup
+              return false;
+            }
 
-              state_copy = state;
-              return true;
-            });
-          }
-
-          juce::Logger::outputDebugString("buffer send");
-          message = ::AudioBuffer();
-          float sample;
-          while (queue.pop(sample)) {
-            message.add_samples(sample);
-          }
-
-          juce::Logger::outputDebugString("sample count=" + juce::String(message.samples().size()));
-          StartWrite(&message);
+            state_copy = state;
+            return true;
+          });
         }
+
+        juce::Logger::outputDebugString("buffer send");
+        message = ::AudioBuffer();
+        float sample;
+        while (queue.pop(sample)) {
+          message.add_samples(sample);
+        }
+
+        juce::Logger::outputDebugString("sample count=" +
+                                        juce::String(message.samples().size()));
+        StartWrite(&message);
       }
 
       int state_copy = 0;
