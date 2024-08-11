@@ -63,7 +63,10 @@ public:
         NextWrite();
       }
 
-      void OnDone() override { delete this; }
+      void OnDone() override {
+        juce::Logger::outputDebugString("Reactor OnDone");
+        delete this;
+      }
 
       void OnWriteDone(bool /*ok*/) override {
         juce::Logger::outputDebugString("Reactor OnWriteDone");
@@ -72,10 +75,16 @@ public:
 
       void OnCancel() override {
         juce::Logger::outputDebugString("Reactor OnCancel");
+        is_cancelled = true;
       }
 
     private:
       void NextWrite() {
+        if (is_cancelled) {
+          Finish(grpc::Status::CANCELLED);
+          return;
+        }
+
         // TODO probably should not block here, but don't see how to notify the
         // reactor to start the next write asynchronously
 
@@ -108,6 +117,7 @@ public:
       int state_copy = 0;
       AudioBuffer message;
       AudioQueue &queue;
+      bool is_cancelled = false;
     };
 
     juce::Logger::outputDebugString("stream starting");
