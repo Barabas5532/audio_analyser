@@ -50,16 +50,14 @@ public:
         // This version uses a single hardcoded audio sample queue, that works
         // as long as there is a only a single audio stream running at once.
 
-        juce::Logger::outputDebugString("construct Reactor");
+        juce::Logger::outputDebugString("New GetAudioStream starting");
         {
           std::lock_guard lock{mutex};
           state_copy = state;
         }
 
-        juce::Logger::outputDebugString("queue reset");
         queue.reset();
 
-        juce::Logger::outputDebugString("first write");
         NextWrite();
       }
 
@@ -69,7 +67,6 @@ public:
       }
 
       void OnWriteDone(bool /*ok*/) override {
-        juce::Logger::outputDebugString("Reactor OnWriteDone");
         NextWrite();
       }
 
@@ -88,7 +85,6 @@ public:
         // TODO probably should not block here, but don't see how to notify the
         // reactor to start the next write asynchronously
 
-        juce::Logger::outputDebugString("waiting for notify");
         {
           std::unique_lock lock{mutex};
           cv.wait(lock, [&]() -> bool {
@@ -102,15 +98,12 @@ public:
           });
         }
 
-        juce::Logger::outputDebugString("buffer send");
         message = ::AudioBuffer();
         float sample;
         while (queue.pop(sample)) {
           message.add_samples(sample);
         }
 
-        juce::Logger::outputDebugString("sample count=" +
-                                        juce::String(message.samples().size()));
         StartWrite(&message);
       }
 
@@ -120,7 +113,6 @@ public:
       bool is_cancelled = false;
     };
 
-    juce::Logger::outputDebugString("stream starting");
     return new Reactor(queue);
   }
 
