@@ -12,7 +12,7 @@ AudioAnalyserAudioProcessor::AudioAnalyserAudioProcessor()
               .withOutput("Output", juce::AudioChannelSet::stereo(), true)
 #endif
               ),
-      server_thread(*this) {
+      server_thread(*this), rms_meter{meter_chain.get<0>()} {
 
   server_thread.startThread();
 
@@ -97,14 +97,15 @@ void AudioAnalyserAudioProcessor::changeProgramName(
 //==============================================================================
 void AudioAnalyserAudioProcessor::prepareToPlay(double sampleRate,
                                                 int samplesPerBlock) {
-  // Use this method as the place to do any pre-playback
-  // initialisation that you need..
-  juce::ignoreUnused(sampleRate, samplesPerBlock);
+  meter_chain.prepare({
+      .sampleRate{sampleRate},
+      .maximumBlockSize{static_cast<juce::uint32>(samplesPerBlock)},
+      .numChannels{static_cast<juce::uint32>(getTotalNumInputChannels())},
+  });
 }
 
 void AudioAnalyserAudioProcessor::releaseResources() {
-  // When playback stops, you can use this as an opportunity to free up any
-  // spare memory, etc.
+  meter_chain.reset();
 }
 
 bool AudioAnalyserAudioProcessor::isBusesLayoutSupported(
@@ -139,6 +140,11 @@ void AudioAnalyserAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
   for (int i = 0; i < buffer.getNumSamples(); i++) {
     queue.push(samples[i]);
   }
+
+  auto block = juce::dsp::AudioBlock<float>{buffer};
+  auto process_context = juce::dsp::ProcessContextReplacing(block);
+
+  meter_chain.process(process_context);
 
   buffer.clear();
 }

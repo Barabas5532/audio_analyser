@@ -18,6 +18,7 @@ target_sources(AudioAnalyser
         PRIVATE
         audio_queue.cpp
         plugin_editor.cpp
+        meters/rms_meter.cpp
         plugin_processor.cpp
         grpc_server_thread.cpp
         )
