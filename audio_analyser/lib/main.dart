@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'dart:io';
 
+import 'meters.dart';
 import 'rate_counter.dart';
 import 'audio_plot.dart';
 import 'embedding/proto/generated/audio_analyser.pbgrpc.dart' as grpc;
@@ -88,7 +89,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -97,23 +97,29 @@ class MyApp extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Audio Analyser'),
         ),
-        body: AudioPlotExample(rate: rate, engine: engine),
+        body: Column(
+          children: [
+            Flexible(child: Oscilloscope(rate: rate, engine: engine)),
+            Divider(),
+            Flexible(child: Meters()),
+          ],
+        ),
       ),
     );
   }
 }
 
-class AudioPlotExample extends StatefulWidget {
-  const AudioPlotExample({super.key, required this.engine, required this.rate});
+class Oscilloscope extends StatefulWidget {
+  const Oscilloscope({super.key, required this.engine, required this.rate});
 
   final AudioEngineBase engine;
   final double rate;
 
   @override
-  State<AudioPlotExample> createState() => _AudioPlotExampleState();
+  State<Oscilloscope> createState() => _OscilloscopeState();
 }
 
-class _AudioPlotExampleState extends State<AudioPlotExample> {
+class _OscilloscopeState extends State<Oscilloscope> {
   final trigger = Trigger();
 
   int lastScreenBufferSize = 0;
