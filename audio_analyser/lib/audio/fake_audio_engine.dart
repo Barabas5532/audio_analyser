@@ -1,19 +1,20 @@
 import 'dart:async';
 import 'dart:math' as m;
 
+import 'package:audio_analyser/audio/meters_state.dart';
 import 'package:logging/logging.dart';
 
 import 'audio_engine.dart';
 
 final _log = Logger('fake_audio_engine');
 
-class FakeAudioEngine extends AudioEngineBase {
+class FakeAudioEngine extends AudioEngine {
   FakeAudioEngine(this.sampleRate, this.bufferSize) {
     final bufferPeriodMs = bufferSize / sampleRate * 1000;
     _log.info('Timer period: $bufferPeriodMs ms');
 
     timer = Timer.periodic(Duration(milliseconds: bufferPeriodMs.toInt()),
-            (_) => _generateBuffer());
+        (_) => _generateBuffer());
   }
 
   double sampleRate;
@@ -23,11 +24,11 @@ class FakeAudioEngine extends AudioEngineBase {
 
   late final generator = _SineGenerator(sampleRate, 1000);
 
-  final controller = StreamController<AudioBuffer>();
+  final audioController = StreamController<AudioBuffer>();
 
   void _generateBuffer() {
     final buffer = generator.generate(bufferSize);
-    controller.add(buffer);
+    audioController.add(buffer);
   }
 
   @override
@@ -36,7 +37,13 @@ class FakeAudioEngine extends AudioEngineBase {
   }
 
   @override
-  Stream<AudioBuffer> get audio => controller.stream;
+  Stream<AudioBuffer> get audio => audioController.stream;
+
+  @override
+  Stream<MetersState> get meters => Stream.periodic(
+        const Duration(seconds: 1),
+        (_) => MetersState(rms: m.Random().nextDouble()),
+      );
 }
 
 class _SineGenerator {

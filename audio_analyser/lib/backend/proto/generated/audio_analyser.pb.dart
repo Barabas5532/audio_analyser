@@ -160,6 +160,66 @@ class AudioBuffer extends $pb.GeneratedMessage {
   $core.List<$core.double> get samples => $_getList(0);
 }
 
+class MeterReading extends $pb.GeneratedMessage {
+  factory MeterReading({
+    $core.double? rms,
+  }) {
+    final $result = create();
+    if (rms != null) {
+      $result.rms = rms;
+    }
+    return $result;
+  }
+  MeterReading._() : super();
+  factory MeterReading.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory MeterReading.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'MeterReading',
+      createEmptyInstance: create)
+    ..a<$core.double>(1, _omitFieldNames ? '' : 'rms', $pb.PbFieldType.OF)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
+  MeterReading clone() => MeterReading()..mergeFromMessage(this);
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  MeterReading copyWith(void Function(MeterReading) updates) =>
+      super.copyWith((message) => updates(message as MeterReading))
+          as MeterReading;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static MeterReading create() => MeterReading._();
+  MeterReading createEmptyInstance() => create();
+  static $pb.PbList<MeterReading> createRepeated() =>
+      $pb.PbList<MeterReading>();
+  @$core.pragma('dart2js:noInline')
+  static MeterReading getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<MeterReading>(create);
+  static MeterReading? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.double get rms => $_getN(0);
+  @$pb.TagNumber(1)
+  set rms($core.double v) {
+    $_setFloat(0, v);
+  }
+
+  @$pb.TagNumber(1)
+  $core.bool hasRms() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearRms() => clearField(1);
+}
+
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
 const _omitMessageNames =
     $core.bool.fromEnvironment('protobuf.omit_message_names');

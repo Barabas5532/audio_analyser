@@ -1,9 +1,46 @@
+import 'package:audio_analyser/audio/audio_engine.dart';
+import 'package:audio_analyser/audio/meters_state.dart';
 import 'package:flutter/material.dart';
 
-class Meters extends StatelessWidget {
+class Meters extends StatefulWidget {
   const Meters({
     super.key,
+    required this.engine,
   });
+
+  final AudioEngine engine;
+
+  @override
+  State<Meters> createState() => _MetersState();
+}
+
+class _MetersState extends State<Meters> {
+  MetersState? state;
+
+  @override
+  void initState() {
+    super.initState();
+
+    widget.engine.meters.listen((event) => setState(() => state = event));
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _Meters(state: state);
+  }
+}
+
+class _Meters extends StatelessWidget {
+  const _Meters({
+    required this.state,
+  });
+
+  final MetersState? state;
 
   @override
   Widget build(BuildContext context) {
@@ -22,21 +59,21 @@ class Meters extends StatelessWidget {
         ),
         Container(
           color: Theme.of(context).colorScheme.surfaceContainer,
-          child: const Column(
+          child: Column(
             children: [
               Wrap(
                 children: [
                   _Meter(
-                    label: Text('Meter 1'),
-                    value: 1,
-                    unit: Text('Hz'),
+                    label: const Text('RMS Level'),
+                    value: state?.rms,
+                    unit: const Text('V'),
                   ),
-                  _Meter(
+                  const _Meter(
                     label: Text('Meter 2'),
                     value: 2,
                     unit: Text('dB'),
                   ),
-                  _Meter(
+                  const _Meter(
                     label: Text('Meter 3'),
                     value: 3,
                     unit: Text('Vrms'),
@@ -74,7 +111,8 @@ class _Meter extends StatelessWidget {
           children: [
             const SizedBox(height: 4),
             DefaultTextStyle(
-                style: Theme.of(context).textTheme.headlineSmall!, child: label),
+                style: Theme.of(context).textTheme.headlineSmall!,
+                child: label),
             const Divider(),
             Expanded(
               child: Row(

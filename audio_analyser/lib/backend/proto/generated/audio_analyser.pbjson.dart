@@ -44,3 +44,15 @@ const AudioBuffer$json = {
 /// Descriptor for `AudioBuffer`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List audioBufferDescriptor = $convert
     .base64Decode('CgtBdWRpb0J1ZmZlchIYCgdzYW1wbGVzGAEgAygCUgdzYW1wbGVz');
+
+@$core.Deprecated('Use meterReadingDescriptor instead')
+const MeterReading$json = {
+  '1': 'MeterReading',
+  '2': [
+    {'1': 'rms', '3': 1, '4': 1, '5': 2, '10': 'rms'},
+  ],
+};
+
+/// Descriptor for `MeterReading`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List meterReadingDescriptor =
+    $convert.base64Decode('CgxNZXRlclJlYWRpbmcSEAoDcm1zGAEgASgCUgNybXM=');
