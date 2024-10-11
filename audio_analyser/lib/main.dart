@@ -100,8 +100,8 @@ class MyApp extends StatelessWidget {
         body: Column(
           children: [
             Flexible(child: Oscilloscope(rate: rate, engine: engine)),
-            Divider(),
-            Flexible(child: Meters()),
+            const Divider(),
+            const Flexible(child: Meters()),
           ],
         ),
       ),
