@@ -1,32 +1,11 @@
 import 'dart:async';
 import 'dart:math' as m;
 
-import 'package:audio_analyser/embedding/proto/generated/audio_analyser.pbgrpc.dart'
-    as grpc;
-
-import 'trigger.dart';
 import 'package:logging/logging.dart';
 
+import 'audio_engine.dart';
+
 final _log = Logger('fake_audio_engine');
-
-abstract class AudioEngineBase {
-  Stream<AudioBuffer> get audio;
-
-  void dispose();
-}
-
-class AudioEngine implements AudioEngineBase {
-  AudioEngine({required this.client});
-
-  final grpc.AudioStreamingClient client;
-
-  @override
-  Stream<AudioBuffer> get audio =>
-      client.getAudioStream(grpc.Void()).map((event) => event.samples);
-
-  @override
-  void dispose() {}
-}
 
 class FakeAudioEngine extends AudioEngineBase {
   FakeAudioEngine(this.sampleRate, this.bufferSize) {
@@ -34,7 +13,7 @@ class FakeAudioEngine extends AudioEngineBase {
     _log.info('Timer period: $bufferPeriodMs ms');
 
     timer = Timer.periodic(Duration(milliseconds: bufferPeriodMs.toInt()),
-        (_) => _generateBuffer());
+            (_) => _generateBuffer());
   }
 
   double sampleRate;

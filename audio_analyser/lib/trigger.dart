@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:circular_buffer/circular_buffer.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-part 'trigger.freezed.dart';
+import 'audio/audio_engine.dart';
 
-typedef AudioBuffer = List<double>;
+part 'trigger.freezed.dart';
 
 @freezed
 sealed class _TriggerState with _$TriggerState {

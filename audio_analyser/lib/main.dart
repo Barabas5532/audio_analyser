@@ -1,12 +1,13 @@
 import 'dart:developer';
 import 'dart:io';
 
+import 'audio/fake_audio_engine.dart';
 import 'meters.dart';
 import 'rate_counter.dart';
 import 'audio_plot.dart';
 import 'embedding/proto/generated/audio_analyser.pbgrpc.dart' as grpc;
 import 'trigger.dart';
-import 'audio_engine.dart';
+import 'audio/audio_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:grpc/grpc.dart' as grpc;
