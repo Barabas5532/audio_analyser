@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'rate_counter.dart';
 import 'audio_plot.dart';
-import 'embedding/native_platform_method_channel.dart';
 import 'embedding/proto/generated/audio_analyser.pbgrpc.dart' as grpc;
 import 'trigger.dart';
 import 'audio_engine.dart';
