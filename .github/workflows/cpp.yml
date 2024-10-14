@@ -10,7 +10,7 @@ defaults:
 env:
   CMAKE_C_COMPILER_LAUNCHER: ccache
   CMAKE_CXX_COMPILER_LAUNCHER: ccache
-  CCACHE_DIR: "${{ GITHUB_WORKSPACE }}/ccache"
+  CCACHE_DIR: "${{ github.workspace }}/ccache"
 
 jobs:
   build-host:
