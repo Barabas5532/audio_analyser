@@ -8,7 +8,7 @@ defaults:
     shell: bash
 
 env:
-  CMAKE_GENERATOR: ninja
+  CMAKE_GENERATOR: Ninja
   CMAKE_C_COMPILER_LAUNCHER: ccache
   CMAKE_CXX_COMPILER_LAUNCHER: ccache
   CCACHE_DIR: "${{ github.workspace }}/ccache"
