@@ -3,7 +3,6 @@ import 'dart:math' as m;
 
 import 'package:audio_analyser/embedding/proto/generated/audio_analyser.pbgrpc.dart'
     as grpc;
-import 'package:flutter/foundation.dart';
 
 import 'trigger.dart';
 import 'package:logging/logging.dart';

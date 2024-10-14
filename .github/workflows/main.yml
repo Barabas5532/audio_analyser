@@ -85,10 +85,4 @@ jobs:
         run: dart run build_runner build
 
       - name: Test
-        run: flutter test --coverage
-
-      - name: Coverage clean-up
-        run: >
-          dart run
-          remove_from_coverage --remove="\.g\.dart$"
-          --file=coverage/lcov.info
+        run: flutter test
