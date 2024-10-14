@@ -15,7 +15,6 @@ env:
 jobs:
   build-host:
     runs-on: ubuntu-latest
-    strategy:
     steps:
       - uses: actions/checkout@v2
         with:
