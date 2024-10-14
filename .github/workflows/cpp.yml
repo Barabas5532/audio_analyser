@@ -10,79 +10,36 @@ defaults:
 env:
   CMAKE_C_COMPILER_LAUNCHER: ccache
   CMAKE_CXX_COMPILER_LAUNCHER: ccache
+  CCACHE_DIR: /ccache
 
 jobs:
-  flutter-analyze:
+  build-host:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory:
-          audio_analyser
+    strategy:
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
 
-      - name: Install flutter
-        uses: subosito/flutter-action@v2
+      - apt update && apt install ccache
+
+      - name: ccache
+        uses: actions/cache@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: ${{ env.FLUTTER_CHANNEL }}
-          cache: true
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-v1-${{ github.job }}-${{ github.sha }}
+          restore-keys: |
+            ccache-v1-${{ github.job }}
 
-      - run: flutter pub get
+      - name: ccache reset statistics
+        run: ccache --zero-stats
 
-      - name: Generate code
-        run: dart run build_runner build
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug host
 
-      - name: Analyze
-        run: flutter analyze
+      - name: Build
+        run: cmake --build build
 
-  flutter-format:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory:
-          audio_analyser
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
+      - name: ccache statistics
+        run: ccache --show-stats
 
-      - name: Install flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: ${{ env.FLUTTER_CHANNEL }}
-          cache: true
-
-      - run: flutter pub get
-
-      - name: Format
-        run: dart format -o none --set-exit-if-changed lib test
-
-  flutter-test:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory:
-          audio_analyser
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
-      - name: Install flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: ${{ env.FLUTTER_CHANNEL }}
-          cache: true
-
-      - run: flutter pub get
-
-      - name: Generate code
-        run: dart run build_runner build
-
-      - name: Test
-        run: flutter test
