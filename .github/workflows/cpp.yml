@@ -25,7 +25,7 @@ jobs:
       - name: Install JUCE dependencies
         run: >
           sudo apt install
-          ibasound2-dev libjack-jackd2-dev
+          libasound2-dev libjack-jackd2-dev
           ladspa-sdk
           libcurl4-openssl-dev
           libfreetype-dev libfontconfig1-dev
