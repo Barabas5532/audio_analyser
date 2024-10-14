@@ -21,7 +21,7 @@ jobs:
         with:
           submodules: recursive
 
-      - apt update && apt install ccache
+      - run: apt update && apt install ccache
 
       - name: ccache
         uses: actions/cache@v2
