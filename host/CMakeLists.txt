@@ -5,13 +5,6 @@ project(audio_analyser VERSION 0.0.1)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(GTK REQUIRED gtk+-3.0)
-
-add_library(gtk3 INTERFACE)
-target_link_libraries(gtk3 INTERFACE ${GTK_LIBRARIES})
-target_include_directories(gtk3 INTERFACE ${GTK_INCLUDE_DIRS})
-
 add_subdirectory(../third_party third_party)
 add_subdirectory(proto)
 
@@ -33,12 +26,13 @@ target_compile_definitions(AudioAnalyser
         PUBLIC
         JUCE_WEB_BROWSER=0
         JUCE_USE_CURL=0
-        JUCE_VST3_CAN_REPLACE_VST2=0)
+        JUCE_VST3_CAN_REPLACE_VST2=0
+        AUDIO_ANALYSER_ENABLE_EMBEDDING=0
+)
 
 target_link_libraries(AudioAnalyser
         PRIVATE
         juce::juce_audio_utils
-        gtk3
         audio_analyser::proto
         SPSCQueue::SPSCQueue
         PUBLIC

@@ -8,9 +8,9 @@ defaults:
     shell: bash
 
 env:
-  FLUTTER_VERSION: '3.24.3'
-  FLUTTER_CHANNEL: 'stable'
-  
+  FLUTTER_VERSION: "3.24.3"
+  FLUTTER_CHANNEL: "stable"
+
 jobs:
   flutter-analyze:
     runs-on: ubuntu-latest
