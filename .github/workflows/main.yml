@@ -17,7 +17,7 @@ jobs:
     defaults:
       run:
         working-directory:
-          frontend
+          audio_analyser
     steps:
       - uses: actions/checkout@v2
         with:
@@ -43,7 +43,7 @@ jobs:
     defaults:
       run:
         working-directory:
-          frontend
+          audio_analyser
     steps:
       - uses: actions/checkout@v2
         with:
@@ -66,7 +66,7 @@ jobs:
     defaults:
       run:
         working-directory:
-          frontend
+          audio_analyser
     steps:
       - uses: actions/checkout@v2
         with:
