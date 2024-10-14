@@ -8,6 +8,7 @@ defaults:
     shell: bash
 
 env:
+  CMAKE_GENERATOR: ninja
   CMAKE_C_COMPILER_LAUNCHER: ccache
   CMAKE_CXX_COMPILER_LAUNCHER: ccache
   CCACHE_DIR: "${{ github.workspace }}/ccache"
@@ -48,7 +49,7 @@ jobs:
         run: cmake -B build -DCMAKE_BUILD_TYPE=Debug host
 
       - name: Build
-        run: cmake --build build
+        run: cmake --build build --target AudioAnalyser_Standalone
 
       - name: ccache statistics
         run: ccache --show-stats
