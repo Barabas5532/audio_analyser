@@ -1,0 +1,10 @@
+[submodule "third_party/JUCE"]
+	path = third_party/JUCE
+	url = https://github.com/juce-framework/JUCE.git
+	branch = 7.0.12
+[submodule "third_party/grpc"]
+	path = third_party/grpc
+	url = https://github.com/grpc/grpc.git
+[submodule "third_party/SPSCQueue"]
+	path = third_party/SPSCQueue
+	url = https://github.com/rigtorp/SPSCQueue.git

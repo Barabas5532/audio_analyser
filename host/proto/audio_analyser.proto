@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+service AudioAnalyser {
+  rpc SetWindowId(WindowId) returns (Void) {}
+}
+
+message Void {}
+
+message WindowId {
+  uint64 id = 1;
+}
+
+service AudioStreaming {
+  rpc GetAudioStream(Void) returns (stream AudioBuffer) {}
+}
+
+message AudioBuffer {
+    repeated float samples = 1;
+}
