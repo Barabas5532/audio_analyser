@@ -8,9 +8,9 @@ defaults:
     shell: bash
 
 env:
-  FLUTTER_VERSION: '3.24.3'
-  FLUTTER_CHANNEL: 'stable'
-  
+  CMAKE_C_COMPILER_LAUNCHER: ccache
+  CMAKE_CXX_COMPILER_LAUNCHER: ccache
+
 jobs:
   flutter-analyze:
     runs-on: ubuntu-latest

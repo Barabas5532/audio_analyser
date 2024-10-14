@@ -1,0 +1,44 @@
+on:
+  pull_request:
+  push:
+    branches: [ master ]
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CMAKE_C_COMPILER_LAUNCHER: ccache
+  CMAKE_CXX_COMPILER_LAUNCHER: ccache
+  CCACHE_DIR: /ccache
+
+jobs:
+  build-plugins:
+    runs-on: ubuntu-latest
+    strategy:
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          
+      - apt update && apt install ccache
+
+      - name: ccache
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-v1-${{ github.job }}-${{ github.sha }}
+          restore-keys: |
+            ccache-v1-${{ github.job }}
+
+      - name: ccache reset statistics
+        run: ccache --zero-stats
+
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug host
+
+      - name: Build
+        run: cmake --build build
+
+      - name: ccache statistics
+        run: ccache --show-stats
