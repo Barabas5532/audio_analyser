@@ -21,7 +21,7 @@ jobs:
         with:
           submodules: recursive
 
-      - run: sudo apt update && sudo apt install ccache
+      - run: sudo apt update && sudo apt install ccache ninja-build
       
       - name: Install JUCE dependencies
         run: >
