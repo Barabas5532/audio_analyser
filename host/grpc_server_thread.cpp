@@ -62,6 +62,10 @@ public:
 
       void OnDone() override {
         juce::Logger::outputDebugString("Reactor OnDone");
+        {
+          std::scoped_lock lock{callback_mutex};
+          callback = std::nullopt;
+        }
         delete this;
       }
 
@@ -111,8 +115,8 @@ private:
       (*callback)();
       // Wait until OnWriteDone reaction before calling back again. We may end
       // up dropping buffers if a write takes longer than the timer period, but
-      // it's preferrable to crashing.
-      callback = nullptr;
+      // it's preferable to crashing.
+      callback = std::nullopt;
     }
   }
 
