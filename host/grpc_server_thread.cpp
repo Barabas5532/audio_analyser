@@ -43,7 +43,10 @@ public:
                  const ::Void *request) {
     class Reactor : public grpc::ServerWriteReactor<::AudioBuffer> {
     public:
-      Reactor(AudioQueue &a_queue) : queue{a_queue} {
+      Reactor(AudioQueue &a_queue, std::mutex &a_callback_mutex,
+              std::optional<std::function<void()>> &a_callback)
+          : queue{a_queue}, callback_mutex{a_callback_mutex},
+            callback{a_callback} {
         // TODO add support for multiple clients
         // register thread safe queue stream with the audio app at runtime
         //
@@ -51,24 +54,22 @@ public:
         // as long as there is a only a single audio stream running at once.
 
         juce::Logger::outputDebugString("New GetAudioStream starting");
-        {
-          std::lock_guard lock{mutex};
-          state_copy = state;
-        }
-
+        
         queue.reset();
-
+        
         NextWrite();
       }
 
       void OnDone() override {
         juce::Logger::outputDebugString("Reactor OnDone");
+        {
+          std::scoped_lock lock{callback_mutex};
+          callback = std::nullopt;
+        }
         delete this;
       }
 
-      void OnWriteDone(bool /*ok*/) override {
-        NextWrite();
-      }
+      void OnWriteDone(bool /*ok*/) override { NextWrite(); }
 
       void OnCancel() override {
         juce::Logger::outputDebugString("Reactor OnCancel");
@@ -82,58 +83,47 @@ public:
           return;
         }
 
-        // TODO probably should not block here, but don't see how to notify the
-        // reactor to start the next write asynchronously
-
         {
-          std::unique_lock lock{mutex};
-          cv.wait(lock, [&]() -> bool {
-            if (state_copy == state) {
-              // spurious wakeup
-              return false;
+          std::scoped_lock lock{callback_mutex};
+
+          callback = [this]() {
+            message = ::AudioBuffer();
+            float sample;
+            while (this->queue.pop(sample)) {
+              message.add_samples(sample);
             }
-
-            state_copy = state;
-            return true;
-          });
+            this->StartWrite(&message);
+          };
         }
-
-        message = ::AudioBuffer();
-        float sample;
-        while (queue.pop(sample)) {
-          message.add_samples(sample);
-        }
-
-        StartWrite(&message);
       }
 
-      int state_copy = 0;
       AudioBuffer message;
       AudioQueue &queue;
+      std::mutex &callback_mutex;
+      std::optional<std::function<void()>> &callback;
       bool is_cancelled = false;
     };
 
-    return new Reactor(queue);
+    return new Reactor(queue, callback_mutex, callback);
   }
 
 private:
   void timerCallback() override {
-    // trigger polling of the buffer
-    std::lock_guard lock{mutex};
-    state++;
-    cv.notify_all();
+    std::scoped_lock lock{callback_mutex};
+
+    if (callback.has_value()) {
+      (*callback)();
+      // Wait until OnWriteDone reaction before calling back again. We may end
+      // up dropping buffers if a write takes longer than the timer period, but
+      // it's preferable to crashing.
+      callback = std::nullopt;
+    }
   }
 
-  static std::mutex mutex;
-  static std::condition_variable cv;
-  static int state;
-
   AudioQueue &queue;
+  std::mutex callback_mutex;
+  std::optional<std::function<void()>> callback;
 };
-
-std::mutex AudioStreamingImpl::mutex{};
-std::condition_variable AudioStreamingImpl::cv{};
-int AudioStreamingImpl::state{};
 
 void GrpcServerThread::run() {
   auto audio_streaming_service = AudioStreamingImpl{processor.queue};
