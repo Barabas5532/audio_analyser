@@ -2,6 +2,8 @@
 
 #include "audio_queue.h"
 #include "grpc_server_thread.h"
+#include "meters/meter_reading.h"
+#include "meters/rms_meter.h"
 #include <juce_audio_processors/juce_audio_processors.h>
 
 //==============================================================================
@@ -42,11 +44,16 @@ public:
   //==============================================================================
   void getStateInformation(juce::MemoryBlock &destData) override;
   void setStateInformation(const void *data, int sizeInBytes) override;
+  
+  MeterReading getMeterReading();
 
   GrpcServerThread server_thread;
   std::atomic<int> grpc_server_port;
   juce::ChildProcess gui_process;
   AudioQueue queue;
+  
+  juce::dsp::ProcessorChain<RmsMeter> meter_chain;
+  const RmsMeter &rms_meter;
 
 #if AUDIO_ANALYSER_ENABLE_EMBEDDING
   std::atomic<unsigned long> wId;

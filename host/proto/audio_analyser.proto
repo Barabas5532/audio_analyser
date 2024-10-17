@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package audio_analyser.proto;
+
 service AudioAnalyser {
   rpc SetWindowId(WindowId) returns (Void) {}
 }
@@ -12,8 +14,19 @@ message WindowId {
 
 service AudioStreaming {
   rpc GetAudioStream(Void) returns (stream AudioBuffer) {}
+  rpc GetMeterStream(Void) returns (stream MeterReading) {}
 }
 
 message AudioBuffer {
     repeated float samples = 1;
+}
+
+message MeterReading {
+  float rms = 1;
+  /* TODO
+   * frequency
+   * distortion
+   * SNR
+   * other types of meters
+   */
 }

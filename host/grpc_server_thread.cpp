@@ -31,22 +31,25 @@ private:
 };
 #endif
 
-class AudioStreamingImpl final : public AudioStreaming::CallbackService,
-                                 private juce::Timer {
+class AudioStreamingImpl final
+    : public audio_analyser::proto::AudioStreaming::CallbackService,
+      private juce::Timer {
 public:
-  explicit AudioStreamingImpl(AudioQueue &a_queue) : queue{a_queue} {
+  explicit AudioStreamingImpl(AudioQueue &queue,
+                              std::function<MeterReading()> &get_meter_reading)
+      : queue{queue}, get_meter_reading{get_meter_reading} {
     startTimerHz(100);
   }
 
-  ::grpc::ServerWriteReactor<::AudioBuffer> *
+  ::grpc::ServerWriteReactor<audio_analyser::proto::AudioBuffer> *
   GetAudioStream(::grpc::CallbackServerContext *context,
-                 const ::Void *request) {
-    class Reactor : public grpc::ServerWriteReactor<::AudioBuffer> {
+                 const audio_analyser::proto::Void *request) override {
+    class Reactor
+        : public grpc::ServerWriteReactor<audio_analyser::proto::AudioBuffer> {
     public:
-      Reactor(AudioQueue &a_queue, std::mutex &a_callback_mutex,
-              std::optional<std::function<void()>> &a_callback)
-          : queue{a_queue}, callback_mutex{a_callback_mutex},
-            callback{a_callback} {
+      Reactor(AudioQueue &queue, std::mutex &callback_mutex,
+              std::optional<std::function<void()>> &callback)
+          : queue{queue}, callback_mutex{callback_mutex}, callback{callback} {
         // TODO add support for multiple clients
         // register thread safe queue stream with the audio app at runtime
         //
@@ -54,9 +57,9 @@ public:
         // as long as there is a only a single audio stream running at once.
 
         juce::Logger::outputDebugString("New GetAudioStream starting");
-        
+
         queue.reset();
-        
+
         NextWrite();
       }
 
@@ -87,7 +90,7 @@ public:
           std::scoped_lock lock{callback_mutex};
 
           callback = [this]() {
-            message = ::AudioBuffer();
+            auto message = audio_analyser::proto::AudioBuffer();
             float sample;
             while (this->queue.pop(sample)) {
               message.add_samples(sample);
@@ -97,7 +100,6 @@ public:
         }
       }
 
-      AudioBuffer message;
       AudioQueue &queue;
       std::mutex &callback_mutex;
       std::optional<std::function<void()>> &callback;
@@ -107,26 +109,106 @@ public:
     return new Reactor(queue, callback_mutex, callback);
   }
 
+  ::grpc::ServerWriteReactor<::audio_analyser::proto::MeterReading> *
+  GetMeterStream(::grpc::CallbackServerContext *,
+                 const ::audio_analyser::proto::Void *) override {
+    class Reactor
+        : public grpc::ServerWriteReactor<audio_analyser::proto::MeterReading> {
+    public:
+      Reactor(std::function<MeterReading()> &get_meter_reading,
+              std::mutex &callback_mutex,
+              std::optional<std::function<void()>> &callback)
+          : get_meter_reading{get_meter_reading},
+            callback_mutex{callback_mutex}, callback{callback} {
+        juce::Logger::outputDebugString("New GetMeterStream starting");
+
+        NextWrite();
+      }
+
+      void OnDone() override {
+        juce::Logger::outputDebugString("Reactor OnDone");
+        {
+          std::scoped_lock lock{callback_mutex};
+          callback = std::nullopt;
+        }
+        delete this;
+      }
+
+      void OnWriteDone(bool /*ok*/) override { NextWrite(); }
+
+      void OnCancel() override {
+        juce::Logger::outputDebugString("Reactor OnCancel");
+        is_cancelled = true;
+      }
+
+    private:
+      void NextWrite() {
+        if (is_cancelled) {
+          Finish(grpc::Status::CANCELLED);
+          return;
+        }
+
+        {
+          std::scoped_lock lock{callback_mutex};
+
+          callback = [this]() {
+            auto meter_reading = get_meter_reading();
+            auto message = audio_analyser::proto::MeterReading();
+            message.set_rms(meter_reading.rms);
+            float sample;
+            this->StartWrite(&message);
+          };
+        }
+      }
+
+      std::function<MeterReading()> &get_meter_reading;
+      std::mutex &callback_mutex;
+      std::optional<std::function<void()>> &callback;
+      bool is_cancelled = false;
+    };
+
+    return new Reactor(get_meter_reading, callback2_mutex, callback2);
+  }
+
 private:
   void timerCallback() override {
-    std::scoped_lock lock{callback_mutex};
+    {
+      std::scoped_lock lock{callback_mutex};
 
-    if (callback.has_value()) {
-      (*callback)();
-      // Wait until OnWriteDone reaction before calling back again. We may end
-      // up dropping buffers if a write takes longer than the timer period, but
-      // it's preferable to crashing.
-      callback = std::nullopt;
+      if (callback.has_value()) {
+        (*callback)();
+        // Wait until OnWriteDone reaction before calling back again. We may end
+        // up dropping buffers if a write takes longer than the timer period,
+        // but it's preferable to crashing.
+        callback = std::nullopt;
+      }
+    }
+
+    {
+      std::scoped_lock lock{callback2_mutex};
+
+      if (callback2.has_value()) {
+        (*callback2)();
+        callback2 = std::nullopt;
+      }
     }
   }
 
   AudioQueue &queue;
+  std::function<MeterReading()> &get_meter_reading;
+
   std::mutex callback_mutex;
   std::optional<std::function<void()>> callback;
+
+  std::mutex callback2_mutex;
+  std::optional<std::function<void()>> callback2;
 };
 
 void GrpcServerThread::run() {
-  auto audio_streaming_service = AudioStreamingImpl{processor.queue};
+  auto get_meter_reading = std::function<MeterReading()>{
+      [p = &processor] { return p->getMeterReading(); }};
+  auto audio_streaming_service =
+      AudioStreamingImpl{processor.queue, get_meter_reading};
 
   // TODO CMake config for port
   std::string server_address{"localhost:8080"};

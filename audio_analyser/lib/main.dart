@@ -1,11 +1,13 @@
 import 'dart:developer';
 import 'dart:io';
 
+import 'audio/fake_audio_engine.dart';
+import 'meters.dart';
 import 'rate_counter.dart';
 import 'audio_plot.dart';
-import 'embedding/proto/generated/audio_analyser.pbgrpc.dart' as grpc;
+import 'backend/proto/generated/audio_analyser.pbgrpc.dart' as grpc;
 import 'trigger.dart';
-import 'audio_engine.dart';
+import 'audio/audio_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:grpc/grpc.dart' as grpc;
@@ -36,7 +38,7 @@ void main(List<String> args) async {
   final port = int.tryParse(const String.fromEnvironment("BACKEND_PORT")) ??
       ((1 == args.length) ? int.tryParse(args.single) : null);
 
-  late AudioEngineBase audioEngine;
+  late AudioEngine audioEngine;
 
   // TODO get rate from backend
   const rate = 48000.0;
@@ -65,7 +67,7 @@ void main(List<String> args) async {
      */
 
     final streamingClient = grpc.AudioStreamingClient(channel);
-    audioEngine = AudioEngine(client: streamingClient);
+    audioEngine = GrpcAudioEngine(client: streamingClient);
   } else {
     const bufferSize = 512;
     audioEngine = FakeAudioEngine(rate, bufferSize);
@@ -82,13 +84,12 @@ void main(List<String> args) async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key, required this.engine, required this.rate});
 
-  final AudioEngineBase engine;
+  final AudioEngine engine;
   final double rate;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
@@ -97,23 +98,29 @@ class MyApp extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Audio Analyser'),
         ),
-        body: AudioPlotExample(rate: rate, engine: engine),
+        body: Column(
+          children: [
+            Flexible(child: Oscilloscope(rate: rate, engine: engine)),
+            const Divider(),
+            Flexible(child: Meters(engine: engine)),
+          ],
+        ),
       ),
     );
   }
 }
 
-class AudioPlotExample extends StatefulWidget {
-  const AudioPlotExample({super.key, required this.engine, required this.rate});
+class Oscilloscope extends StatefulWidget {
+  const Oscilloscope({super.key, required this.engine, required this.rate});
 
-  final AudioEngineBase engine;
+  final AudioEngine engine;
   final double rate;
 
   @override
-  State<AudioPlotExample> createState() => _AudioPlotExampleState();
+  State<Oscilloscope> createState() => _OscilloscopeState();
 }
 
-class _AudioPlotExampleState extends State<AudioPlotExample> {
+class _OscilloscopeState extends State<Oscilloscope> {
   final trigger = Trigger();
 
   int lastScreenBufferSize = 0;
