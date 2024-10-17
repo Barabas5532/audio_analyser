@@ -1,7 +1,7 @@
 #include "rms_meter.h"
 
 
-float RmsMeter::get_reading() { return reading; }
+float RmsMeter::get_reading() const { return reading; }
 
 void RmsMeter::prepare(const juce::dsp::ProcessSpec &spec) {}
 

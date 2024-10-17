@@ -19,10 +19,10 @@ import 'audio_analyser.pb.dart' as $0;
 
 export 'audio_analyser.pb.dart';
 
-@$pb.GrpcServiceName('AudioAnalyser')
+@$pb.GrpcServiceName('audio_analyser.proto.AudioAnalyser')
 class AudioAnalyserClient extends $grpc.Client {
   static final _$setWindowId = $grpc.ClientMethod<$0.WindowId, $0.Void>(
-      '/AudioAnalyser/SetWindowId',
+      '/audio_analyser.proto.AudioAnalyser/SetWindowId',
       ($0.WindowId value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.Void.fromBuffer(value));
 
@@ -37,9 +37,9 @@ class AudioAnalyserClient extends $grpc.Client {
   }
 }
 
-@$pb.GrpcServiceName('AudioAnalyser')
+@$pb.GrpcServiceName('audio_analyser.proto.AudioAnalyser')
 abstract class AudioAnalyserServiceBase extends $grpc.Service {
-  $core.String get $name => 'AudioAnalyser';
+  $core.String get $name => 'audio_analyser.proto.AudioAnalyser';
 
   AudioAnalyserServiceBase() {
     $addMethod($grpc.ServiceMethod<$0.WindowId, $0.Void>(
@@ -60,14 +60,14 @@ abstract class AudioAnalyserServiceBase extends $grpc.Service {
       $grpc.ServiceCall call, $0.WindowId request);
 }
 
-@$pb.GrpcServiceName('AudioStreaming')
+@$pb.GrpcServiceName('audio_analyser.proto.AudioStreaming')
 class AudioStreamingClient extends $grpc.Client {
   static final _$getAudioStream = $grpc.ClientMethod<$0.Void, $0.AudioBuffer>(
-      '/AudioStreaming/GetAudioStream',
+      '/audio_analyser.proto.AudioStreaming/GetAudioStream',
       ($0.Void value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.AudioBuffer.fromBuffer(value));
   static final _$getMeterStream = $grpc.ClientMethod<$0.Void, $0.MeterReading>(
-      '/AudioStreaming/GetMeterStream',
+      '/audio_analyser.proto.AudioStreaming/GetMeterStream',
       ($0.Void value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.MeterReading.fromBuffer(value));
 
@@ -91,9 +91,9 @@ class AudioStreamingClient extends $grpc.Client {
   }
 }
 
-@$pb.GrpcServiceName('AudioStreaming')
+@$pb.GrpcServiceName('audio_analyser.proto.AudioStreaming')
 abstract class AudioStreamingServiceBase extends $grpc.Service {
-  $core.String get $name => 'AudioStreaming';
+  $core.String get $name => 'audio_analyser.proto.AudioStreaming';
 
   AudioStreamingServiceBase() {
     $addMethod($grpc.ServiceMethod<$0.Void, $0.AudioBuffer>(

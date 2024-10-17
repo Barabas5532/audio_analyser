@@ -26,6 +26,8 @@ class Void extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'Void',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'audio_analyser.proto'),
       createEmptyInstance: create)
     ..hasRequiredFields = false;
 
@@ -71,6 +73,8 @@ class WindowId extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'WindowId',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'audio_analyser.proto'),
       createEmptyInstance: create)
     ..a<$fixnum.Int64>(1, _omitFieldNames ? '' : 'id', $pb.PbFieldType.OU6,
         defaultOrMaker: $fixnum.Int64.ZERO)
@@ -130,6 +134,8 @@ class AudioBuffer extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'AudioBuffer',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'audio_analyser.proto'),
       createEmptyInstance: create)
     ..p<$core.double>(1, _omitFieldNames ? '' : 'samples', $pb.PbFieldType.KF)
     ..hasRequiredFields = false;
@@ -180,6 +186,8 @@ class MeterReading extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'MeterReading',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'audio_analyser.proto'),
       createEmptyInstance: create)
     ..a<$core.double>(1, _omitFieldNames ? '' : 'rms', $pb.PbFieldType.OF)
     ..hasRequiredFields = false;

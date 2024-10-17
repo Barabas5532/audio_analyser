@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package audio_analyser.proto;
+
 service AudioAnalyser {
   rpc SetWindowId(WindowId) returns (Void) {}
 }

@@ -1,0 +1,3 @@
+struct MeterReading {
+  float rms;
+};

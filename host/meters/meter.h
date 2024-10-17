@@ -3,5 +3,5 @@
 class MeterBase : public juce::dsp::ProcessorBase {
 public: 
   /// Get the meter reading in meter specific units
-  virtual float get_reading() = 0;
+  [[nodiscard]] virtual float get_reading() const = 0;
 };

@@ -173,6 +173,10 @@ void AudioAnalyserAudioProcessor::setStateInformation(const void *data,
   juce::ignoreUnused(data, sizeInBytes);
 }
 
+MeterReading AudioAnalyserAudioProcessor::getMeterReading() {
+  return MeterReading{.rms{rms_meter.get_reading()}};
+}
+
 //==============================================================================
 // This creates new instances of the plugin..
 juce::AudioProcessor *JUCE_CALLTYPE createPluginFilter() {
