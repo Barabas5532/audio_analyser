@@ -9,7 +9,7 @@ static constexpr std::size_t FFT_SIZE = 1 << FFT_ORDER;
 
 struct FftReading {
   float sample_rate;
-  std::array<float, internal::FFT_SIZE / 2> magnitudes;
+  std::array<float, internal::FFT_SIZE> magnitudes;
 };
 
 class FftMeter final : public Meter<FftReading> {

@@ -398,10 +398,7 @@ class _FftScopeState extends State<FftScope> {
         xAxisSize: _kXAxisSize,
         yAxisSize: _kYAxisSize,
         xPoints: xPoints,
-        yPoints: yPoints.map((e) {
-          print(e);
-          return e;
-        }),
+        yPoints: yPoints,
         translateXAxis: translateXAxis,
         translateYAxis: translateYAxis,
         zoomXAxis: zoomXAxis,
@@ -477,7 +474,7 @@ class _FftScopeState extends State<FftScope> {
           .map(
             (e) => 20 * _log10(e),
           )
-          // FIXME deal with infinity better at the higher levels
+          // FIXME deal with infinity better elsewhere
           .map((e) => e < -144.0 ? -144.0 : e)
           .toList();
     });

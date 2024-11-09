@@ -31,7 +31,7 @@ void FftMeter::push_next_sample_into_fifo(float sample) noexcept {
         .sample_rate{this->sample_rate},
         .magnitudes{},
     };
-    memcpy(reading.magnitudes.data(), fftData.data(), internal::FFT_SIZE / 2);
+    memcpy(reading.magnitudes.data(), fftData.data(), internal::FFT_SIZE);
 
     this->reading = reading;
   }
