@@ -12,7 +12,8 @@ AudioAnalyserAudioProcessor::AudioAnalyserAudioProcessor()
               .withOutput("Output", juce::AudioChannelSet::stereo(), true)
 #endif
               ),
-      server_thread(*this), rms_meter{meter_chain.get<0>()} {
+      server_thread(*this), rms_meter{meter_chain.get<0>()},
+      fft_meter{meter_chain.get<1>()} {
 
   server_thread.startThread();
 
@@ -174,7 +175,8 @@ void AudioAnalyserAudioProcessor::setStateInformation(const void *data,
 }
 
 MeterReading AudioAnalyserAudioProcessor::getMeterReading() {
-  return MeterReading{.rms{rms_meter.get_reading()}};
+  return MeterReading{.rms{rms_meter.get_reading()},
+                      .fft{fft_meter.get_reading()}};
 }
 
 //==============================================================================

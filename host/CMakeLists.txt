@@ -8,6 +8,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 add_subdirectory(../third_party third_party)
 add_subdirectory(proto)
 
+add_library(compiler_flags INTERFACE)
+target_compile_options(compiler_flags INTERFACE -Werror=missing-field-initializers)
+
 juce_add_plugin(AudioAnalyser
         PLUGIN_MANUFACTURER_CODE BaRa
         PLUGIN_CODE AuAn
@@ -19,6 +22,7 @@ target_sources(AudioAnalyser
         audio_queue.cpp
         plugin_editor.cpp
         meters/rms_meter.cpp
+        meters/fft_meter.cpp
         plugin_processor.cpp
         grpc_server_thread.cpp
         )
@@ -33,9 +37,12 @@ target_compile_definitions(AudioAnalyser
 
 target_link_libraries(AudioAnalyser
         PRIVATE
-        juce::juce_audio_utils
-        audio_analyser::proto
+        atomic
         SPSCQueue::SPSCQueue
+        audio_analyser::proto
+        compiler_flags
+        juce::juce_dsp
+        juce::juce_audio_utils
         PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags

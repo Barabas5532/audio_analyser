@@ -22,7 +22,19 @@ message AudioBuffer {
 }
 
 message MeterReading {
+  // A state to be displayed on the FFT meter.
+  message FftReading {
+    // The current sample rate used to obtain this reading.
+    float sample_rate = 1;
+    // The magnitude in linear units of the signal in each bin. The range is
+    // (-1, 1).
+    // 
+    // The first entry corresponds to DC, and the last entry to sample_rate / 2.
+    repeated float magnitudes = 2;
+  }
+
   float rms = 1;
+  FftReading fft = 2;
   /* TODO
    * frequency
    * distortion
@@ -30,3 +42,4 @@ message MeterReading {
    * other types of meters
    */
 }
+

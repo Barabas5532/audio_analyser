@@ -52,8 +52,9 @@ public:
   juce::ChildProcess gui_process;
   AudioQueue queue;
   
-  juce::dsp::ProcessorChain<RmsMeter> meter_chain;
+  juce::dsp::ProcessorChain<RmsMeter, FftMeter> meter_chain;
   const RmsMeter &rms_meter;
+  const FftMeter &fft_meter;
 
 #if AUDIO_ANALYSER_ENABLE_EMBEDDING
   std::atomic<unsigned long> wId;

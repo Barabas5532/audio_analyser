@@ -5,7 +5,6 @@ part 'fft_state.freezed.dart';
 @freezed
 class FftState with _$FftState {
   factory FftState({
-    required double sampleRate,
     required List<double> frequencies,
     required List<double> magnitude,
   }) = _FftState;

@@ -106,7 +106,12 @@ class MyApp extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(child: Oscilloscope(rate: rate, engine: engine)),
-                  Expanded(child: FftScope(engine: engine)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                      child: FftScope(
+                          state: engine.meters.map(
+                    (e) => e.fft,
+                  ))),
                 ],
               ),
             ),
@@ -319,9 +324,9 @@ class _OscilloscopeState extends State<Oscilloscope> {
 }
 
 class FftScope extends StatefulWidget {
-  const FftScope({super.key, required this.engine});
+  const FftScope({super.key, required this.state});
 
-  final AudioEngine engine;
+  final Stream<FftState> state;
 
   @override
   State<FftScope> createState() => _FftScopeState();
@@ -337,18 +342,11 @@ class _FftScopeState extends State<FftScope> {
   void initState() {
     super.initState();
 
-    widget.engine.fft.listen(_process);
+    widget.state.listen(_stateChanged);
 
     rateCounter.rateStream.listen(
       (rate) => _log.info('FFT block rate: $rate Hz'),
     );
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-
-    widget.engine.dispose();
   }
 
   AxisParameters _xAxis = AxisParameters(
@@ -400,7 +398,10 @@ class _FftScopeState extends State<FftScope> {
         xAxisSize: _kXAxisSize,
         yAxisSize: _kYAxisSize,
         xPoints: xPoints,
-        yPoints: yPoints,
+        yPoints: yPoints.map((e) {
+          print(e);
+          return e;
+        }),
         translateXAxis: translateXAxis,
         translateYAxis: translateYAxis,
         zoomXAxis: zoomXAxis,
@@ -467,7 +468,7 @@ class _FftScopeState extends State<FftScope> {
     }
   }
 
-  void _process(FftState fft) {
+  void _stateChanged(FftState fft) {
     rateCounter.tick();
 
     setState(() {
@@ -476,6 +477,8 @@ class _FftScopeState extends State<FftScope> {
           .map(
             (e) => 20 * _log10(e),
           )
+          // FIXME deal with infinity better at the higher levels
+          .map((e) => e < -144.0 ? -144.0 : e)
           .toList();
     });
   }

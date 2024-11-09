@@ -10,8 +10,8 @@ typedef AudioBuffer = List<double>;
 
 abstract class AudioEngine {
   Stream<AudioBuffer> get audio;
+
   Stream<MetersState> get meters;
-  Stream<FftState> get fft;
 
   void dispose();
 }
@@ -26,13 +26,18 @@ class GrpcAudioEngine implements AudioEngine {
       client.getAudioStream(grpc.Void()).map((event) => event.samples);
 
   @override
-  Stream<MetersState> get meters => client
-      .getMeterStream(grpc.Void())
-      .map((event) => MetersState(rms: event.rms));
-
-  @override
-  // TODO: implement fft
-  Stream<FftState> get fft => throw UnimplementedError();
+  late final Stream<MetersState> meters =
+      client.getMeterStream(grpc.Void()).asBroadcastStream().map((event) => MetersState(
+          rms: event.rms,
+          fft: FftState(
+              frequencies: List<double>.generate(
+                event.fft.magnitudes.length,
+                (i) =>
+                    event.fft.sampleRate *
+                    i /
+                    (event.fft.magnitudes.length - 1),
+              ),
+              magnitude: event.fft.magnitudes)));
 
   @override
   void dispose() {}
