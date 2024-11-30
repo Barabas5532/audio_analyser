@@ -26,14 +26,16 @@ class GrpcAudioEngine implements AudioEngine {
       client.getAudioStream(grpc.Void()).map((event) => event.samples);
 
   @override
-  late final Stream<MetersState> meters =
-      client.getMeterStream(grpc.Void()).asBroadcastStream().map((event) => MetersState(
+  late final Stream<MetersState> meters = client
+      .getMeterStream(grpc.Void())
+      .asBroadcastStream()
+      .map((event) => MetersState(
           rms: event.rms,
           fft: FftState(
               frequencies: List<double>.generate(
                 event.fft.magnitudes.length,
                 (i) =>
-                    event.fft.sampleRate *
+                    (event.fft.sampleRate / 2) *
                     i /
                     (event.fft.magnitudes.length - 1),
               ),

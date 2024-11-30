@@ -45,13 +45,15 @@ class FakeAudioEngine extends AudioEngine {
   @override
   Stream<MetersState> get meters => Stream.periodic(
         const Duration(seconds: 1),
-        (_) => MetersState(rms: m.Random().nextDouble(), fft: FftState(
-          frequencies: List.generate(
-            128,
-                (i) => i * sampleRate / 128.0,
-          ),
-          magnitude: List.generate(128, (_) => _random.nextDouble()),
-        )),
+        (_) => MetersState(
+            rms: m.Random().nextDouble(),
+            fft: FftState(
+              frequencies: List.generate(
+                128,
+                (i) => (sampleRate / 2) * i / 128.0,
+              ),
+              magnitude: List.generate(128, (_) => _random.nextDouble()),
+            )),
       );
 }
 

@@ -23,6 +23,8 @@ void FftMeter::push_next_sample_into_fifo(float sample) noexcept {
     std::memcpy(fftData.data(), fifo.data(), sizeof(float) * fifo.size());
 
     window.multiplyWithWindowingTable(fftData.data(), internal::FFT_SIZE);
+    // Precondition of performFrequencyOnlyForwardTransform from its docs.
+    assert(fftData.size() == fft.getSize() * 2);
     fft.performFrequencyOnlyForwardTransform(fftData.data());
 
     fifo_index = 0;
@@ -31,7 +33,7 @@ void FftMeter::push_next_sample_into_fifo(float sample) noexcept {
         .sample_rate{this->sample_rate},
         .magnitudes{},
     };
-    memcpy(reading.magnitudes.data(), fftData.data(), internal::FFT_SIZE);
+    std::memcpy(reading.magnitudes.data(), fftData.data(), sizeof(float) * internal::FFT_SIZE / 2);
 
     this->reading = reading;
   }
