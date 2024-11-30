@@ -1,6 +1,8 @@
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:audio_analyser/generator.dart';
+
 import 'audio/fake_audio_engine.dart';
 import 'meters.dart';
 import 'rate_counter.dart';
@@ -98,11 +100,18 @@ class MyApp extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Audio Analyser'),
         ),
-        body: Column(
+        body: Row(
           children: [
-            Flexible(child: Oscilloscope(rate: rate, engine: engine)),
-            const Divider(),
-            Flexible(child: Meters(engine: engine)),
+            Container(width: 300, child: GeneratorPanel()),
+            Flexible(
+              child: Column(
+                children: [
+                  Flexible(child: Oscilloscope(rate: rate, engine: engine)),
+                  const Divider(),
+                  Flexible(child: Meters(engine: engine)),
+                ],
+              ),
+            ),
           ],
         ),
       ),
