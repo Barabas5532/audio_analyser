@@ -228,6 +228,105 @@ class MeterReading extends $pb.GeneratedMessage {
   void clearRms() => clearField(1);
 }
 
+class GeneratorSettings extends $pb.GeneratedMessage {
+  factory GeneratorSettings({
+    $core.double? peakLevel,
+    $core.double? frequency,
+    $core.bool? enabled,
+  }) {
+    final $result = create();
+    if (peakLevel != null) {
+      $result.peakLevel = peakLevel;
+    }
+    if (frequency != null) {
+      $result.frequency = frequency;
+    }
+    if (enabled != null) {
+      $result.enabled = enabled;
+    }
+    return $result;
+  }
+  GeneratorSettings._() : super();
+  factory GeneratorSettings.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory GeneratorSettings.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GeneratorSettings',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'audio_analyser.proto'),
+      createEmptyInstance: create)
+    ..a<$core.double>(1, _omitFieldNames ? '' : 'peakLevel', $pb.PbFieldType.OF)
+    ..a<$core.double>(2, _omitFieldNames ? '' : 'frequency', $pb.PbFieldType.OF)
+    ..aOB(3, _omitFieldNames ? '' : 'enabled')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
+  GeneratorSettings clone() => GeneratorSettings()..mergeFromMessage(this);
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  GeneratorSettings copyWith(void Function(GeneratorSettings) updates) =>
+      super.copyWith((message) => updates(message as GeneratorSettings))
+          as GeneratorSettings;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GeneratorSettings create() => GeneratorSettings._();
+  GeneratorSettings createEmptyInstance() => create();
+  static $pb.PbList<GeneratorSettings> createRepeated() =>
+      $pb.PbList<GeneratorSettings>();
+  @$core.pragma('dart2js:noInline')
+  static GeneratorSettings getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GeneratorSettings>(create);
+  static GeneratorSettings? _defaultInstance;
+
+  /// Output level in peak level full scale. 0 is silence, 1 is full scale.
+  @$pb.TagNumber(1)
+  $core.double get peakLevel => $_getN(0);
+  @$pb.TagNumber(1)
+  set peakLevel($core.double v) {
+    $_setFloat(0, v);
+  }
+
+  @$pb.TagNumber(1)
+  $core.bool hasPeakLevel() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearPeakLevel() => clearField(1);
+
+  /// Output frequency in Hz.
+  @$pb.TagNumber(2)
+  $core.double get frequency => $_getN(1);
+  @$pb.TagNumber(2)
+  set frequency($core.double v) {
+    $_setFloat(1, v);
+  }
+
+  @$pb.TagNumber(2)
+  $core.bool hasFrequency() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearFrequency() => clearField(2);
+
+  /// When true, audio output is active, otherwise the output is silence
+  @$pb.TagNumber(3)
+  $core.bool get enabled => $_getBF(2);
+  @$pb.TagNumber(3)
+  set enabled($core.bool v) {
+    $_setBool(2, v);
+  }
+
+  @$pb.TagNumber(3)
+  $core.bool hasEnabled() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearEnabled() => clearField(3);
+}
+
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
 const _omitMessageNames =
     $core.bool.fromEnvironment('protobuf.omit_message_names');

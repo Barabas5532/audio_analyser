@@ -56,3 +56,18 @@ const MeterReading$json = {
 /// Descriptor for `MeterReading`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List meterReadingDescriptor =
     $convert.base64Decode('CgxNZXRlclJlYWRpbmcSEAoDcm1zGAEgASgCUgNybXM=');
+
+@$core.Deprecated('Use generatorSettingsDescriptor instead')
+const GeneratorSettings$json = {
+  '1': 'GeneratorSettings',
+  '2': [
+    {'1': 'peak_level', '3': 1, '4': 1, '5': 2, '10': 'peakLevel'},
+    {'1': 'frequency', '3': 2, '4': 1, '5': 2, '10': 'frequency'},
+    {'1': 'enabled', '3': 3, '4': 1, '5': 8, '10': 'enabled'},
+  ],
+};
+
+/// Descriptor for `GeneratorSettings`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List generatorSettingsDescriptor = $convert.base64Decode(
+    'ChFHZW5lcmF0b3JTZXR0aW5ncxIdCgpwZWFrX2xldmVsGAEgASgCUglwZWFrTGV2ZWwSHAoJZn'
+    'JlcXVlbmN5GAIgASgCUglmcmVxdWVuY3kSGAoHZW5hYmxlZBgDIAEoCFIHZW5hYmxlZA==');
