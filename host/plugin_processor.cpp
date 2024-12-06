@@ -143,6 +143,13 @@ void AudioAnalyserAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
   auto process_context = juce::dsp::ProcessContextReplacing(block);
 
   meter_chain.process(process_context);
+  
+  // Process the generator last as it overwrites the buffer contents with the
+  // generated signal.
+  generator.set_peak_level(0.5);
+  generator.set_frequency(1000);
+  generator.set_enable(true);
+  generator.process(process_context);
 
   buffer.clear();
 }

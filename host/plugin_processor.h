@@ -1,6 +1,7 @@
 #pragma once
 
 #include "audio_queue.h"
+#include "generator/generator.h"
 #include "grpc_server_thread.h"
 #include "meters/meter_reading.h"
 #include "meters/rms_meter.h"
@@ -53,6 +54,7 @@ public:
   AudioQueue queue;
   
   juce::dsp::ProcessorChain<RmsMeter> meter_chain;
+  Generator generator;
   const RmsMeter &rms_meter;
 
 #if AUDIO_ANALYSER_ENABLE_EMBEDDING
