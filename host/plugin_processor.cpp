@@ -156,8 +156,6 @@ void AudioAnalyserAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
   generator.set_frequency(1000);
   generator.set_enable(true);
   generator.process(process_context);
-
-  buffer.clear();
 }
 
 //==============================================================================
