@@ -97,14 +97,20 @@ void AudioAnalyserAudioProcessor::changeProgramName(
 //==============================================================================
 void AudioAnalyserAudioProcessor::prepareToPlay(double sampleRate,
                                                 int samplesPerBlock) {
-  meter_chain.prepare({
+  auto spec = juce::dsp::ProcessSpec{
       .sampleRate{sampleRate},
       .maximumBlockSize{static_cast<juce::uint32>(samplesPerBlock)},
       .numChannels{static_cast<juce::uint32>(getTotalNumInputChannels())},
-  });
+  };
+  
+  meter_chain.prepare(spec);
+  generator.prepare(spec);
 }
 
-void AudioAnalyserAudioProcessor::releaseResources() { meter_chain.reset(); }
+void AudioAnalyserAudioProcessor::releaseResources() {
+  meter_chain.reset();
+  generator.reset();
+}
 
 bool AudioAnalyserAudioProcessor::isBusesLayoutSupported(
     const BusesLayout &layouts) const {
