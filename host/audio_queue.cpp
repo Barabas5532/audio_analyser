@@ -3,7 +3,7 @@
 
 AudioQueue::AudioQueue() : queue(192000) {}
 
-void AudioQueue::push(float sample) { queue.push(sample); }
+void AudioQueue::push(float sample) { queue.try_push(sample); }
 
 bool AudioQueue::pop(float &sample) {
   if (queue.empty()) {
