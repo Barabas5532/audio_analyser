@@ -6,7 +6,15 @@ import 'generator_settings.dart';
 
 class GeneratorService extends ChangeNotifier {
   GeneratorService({required grpc.AudioGeneratorClient client})
-      : _client = client;
+      : _client = client {
+    client.getGeneratorSettings(grpc.Void()).then(
+      (s) {
+        _settings = GeneratorSettings(
+            enabled: s.enabled, frequency: s.frequency, level: s.peakLevel);
+        notifyListeners();
+      },
+    );
+  }
 
   final grpc.AudioGeneratorClient _client;
   GeneratorSettings? _settings;

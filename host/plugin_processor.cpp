@@ -12,7 +12,6 @@ AudioAnalyserAudioProcessor::AudioAnalyserAudioProcessor()
               .withOutput("Output", juce::AudioChannelSet::stereo(), true)
 #endif
               ),
-      server_thread(*this), rms_meter{meter_chain.get<0>()},
       parameters(
           *this, nullptr, "analyser",
           {std::make_unique<juce::AudioParameterBool>("gen_enable",
@@ -20,7 +19,8 @@ AudioAnalyserAudioProcessor::AudioAnalyserAudioProcessor()
            std::make_unique<juce::AudioParameterFloat>(
                "gen_level", "Generator Level", 0.f, 1.f, 0.5f),
            std::make_unique<juce::AudioParameterFloat>(
-               "gen_frequency", "Generator Frequency", 1.f, 20000.f, 1000.f)}) {
+               "gen_frequency", "Generator Frequency", 1.f, 20000.f, 1000.f)}),
+      server_thread(*this), rms_meter{meter_chain.get<0>()} {
   generator_enabled = parameters.getRawParameterValue("gen_enable");
   generator_level = parameters.getRawParameterValue("gen_level");
   generator_frequency = parameters.getRawParameterValue("gen_frequency");
