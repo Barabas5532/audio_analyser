@@ -12,29 +12,57 @@ class GeneratorPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<GeneratorService>.value(
       value: _service,
-      builder: (context, _) {
-        final settings = context.watch<GeneratorService>().settings;
+      child: const _GeneratorPanel(),
+    );
+  }
+}
 
-        return Column(
-          children: [
-            const Text('Generator'),
-            SwitchListTile(
-              title: const Text('Enable'),
-              value: settings?.enabled ?? false,
-              onChanged: settings == null
-                  ? null
-                  : (v) => _service
-                      .setGeneratorSettings(settings.copyWith(enabled: v)),
-            ),
-            const TextField(
-                decoration:
-                    InputDecoration(label: Text('Level'), suffix: Text('V'))),
-            const TextField(
-                decoration: InputDecoration(
-                    label: Text('Frequency'), suffix: Text('Hz'))),
-          ],
-        );
-      },
+class _GeneratorPanel extends StatefulWidget {
+  const _GeneratorPanel({super.key});
+
+  @override
+  State<_GeneratorPanel> createState() => __GeneratorPanelState();
+}
+
+class __GeneratorPanelState extends State<_GeneratorPanel> {
+  final levelController = TextEditingController();
+  final frequencyController = TextEditingController();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final s = context.read<GeneratorService>();
+    print('dependency changed ${s.settings}');
+    levelController.text = s.settings?.level.toString() ?? '';
+    frequencyController.text = s.settings?.frequency.toString() ?? '';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<GeneratorService>().settings;
+
+    return Column(
+      children: [
+        const Text('Generator'),
+        SwitchListTile(
+          title: const Text('Enable'),
+          value: settings?.enabled ?? false,
+          onChanged: settings == null
+              ? null
+              : (v) => context
+                  .read<GeneratorService>()
+                  .setGeneratorSettings(settings.copyWith(enabled: v)),
+        ),
+        TextField(
+            controller: levelController,
+            decoration:
+                const InputDecoration(label: Text('Level'), suffix: Text('V'))),
+        TextField(
+            controller: frequencyController,
+            decoration:
+                const InputDecoration(label: Text('Frequency'), suffix: Text('Hz'))),
+      ],
     );
   }
 }

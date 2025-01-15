@@ -222,8 +222,8 @@ public:
                        const audio_analyser::proto::GeneratorSettings *request,
                        audio_analyser::proto::Void *) override {
     enabled->setValueNotifyingHost(request->enabled());
-    level->setValueNotifyingHost(request->peak_level());
-    frequency->setValueNotifyingHost(request->frequency());
+    level->setValueNotifyingHost(level->convertTo0to1(request->peak_level()));
+    frequency->setValueNotifyingHost(frequency->convertTo0to1(request->frequency()));
 
     return grpc::Status::OK;
   }
@@ -232,8 +232,8 @@ public:
       grpc::ServerContext *context, const audio_analyser::proto::Void *,
       audio_analyser::proto::GeneratorSettings *response) override {
     response->set_enabled(enabled->getValue() > 0.5f);
-    response->set_peak_level(level->getValue());
-    response->set_frequency(frequency->getValue());
+    response->set_peak_level(level->convertFrom0to1(level->getValue()));
+    response->set_frequency(frequency->convertFrom0to1(frequency->getValue()));
 
     return grpc::Status::OK;
   }
