@@ -12,7 +12,18 @@ AudioAnalyserAudioProcessor::AudioAnalyserAudioProcessor()
               .withOutput("Output", juce::AudioChannelSet::stereo(), true)
 #endif
               ),
-      server_thread(*this), rms_meter{meter_chain.get<0>()} {
+      server_thread(*this), rms_meter{meter_chain.get<0>()},
+      parameters(
+          *this, nullptr, "analyser",
+          {std::make_unique<juce::AudioParameterBool>("gen_enable",
+                                                      "Generator Enable", true),
+           std::make_unique<juce::AudioParameterFloat>(
+               "gen_level", "Generator Level", 0.f, 1.f, 0.5f),
+           std::make_unique<juce::AudioParameterFloat>(
+               "gen_frequency", "Generator Frequency", 1.f, 20000.f, 1000.f)}) {
+  generator_enabled = parameters.getRawParameterValue("gen_enable");
+  generator_level = parameters.getRawParameterValue("gen_level");
+  generator_frequency = parameters.getRawParameterValue("gen_frequency");
 
   server_thread.startThread();
 
@@ -152,9 +163,10 @@ void AudioAnalyserAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
   
   // Process the generator last as it overwrites the buffer contents with the
   // generated signal.
-  generator.set_peak_level(0.5);
-  generator.set_frequency(1000);
-  generator.set_enable(true);
+  generator.set_enable(*generator_enabled > 0.5f);
+  generator.set_peak_level(*generator_level);
+  generator.set_frequency(*generator_frequency);
+  
   generator.process(process_context);
 }
 

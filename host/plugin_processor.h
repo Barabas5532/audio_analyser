@@ -62,6 +62,11 @@ public:
 #endif
 
 private:
-  //==============================================================================
+  juce::AudioProcessorValueTreeState parameters;
+  
+  std::atomic<float>* generator_enabled;
+  std::atomic<float>* generator_level;
+  std::atomic<float>* generator_frequency; 
+  
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioAnalyserAudioProcessor)
 };
