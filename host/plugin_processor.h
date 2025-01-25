@@ -1,6 +1,7 @@
 #pragma once
 
 #include "audio_queue.h"
+#include "generator/generator.h"
 #include "grpc_server_thread.h"
 #include "meters/meter_reading.h"
 #include "meters/rms_meter.h"
@@ -47,19 +48,29 @@ public:
   
   MeterReading getMeterReading();
 
+private:
+  juce::AudioProcessorValueTreeState parameters;
+
   GrpcServerThread server_thread;
   std::atomic<int> grpc_server_port;
   juce::ChildProcess gui_process;
   AudioQueue queue;
   
   juce::dsp::ProcessorChain<RmsMeter> meter_chain;
+  Generator generator;
   const RmsMeter &rms_meter;
 
 #if AUDIO_ANALYSER_ENABLE_EMBEDDING
   std::atomic<unsigned long> wId;
 #endif
 
-private:
-  //==============================================================================
+  std::atomic<float>* generator_enabled;
+  std::atomic<float>* generator_level;
+  std::atomic<float>* generator_frequency; 
+  
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioAnalyserAudioProcessor)
+
+  // Accesses the parameters member to notify the processor about parameter
+  // updates by the frontend. The grpc thread is the only writer of parameters.
+  friend class GrpcServerThread;
 };

@@ -204,11 +204,53 @@ private:
   std::optional<std::function<void()>> callback2;
 };
 
+class AudioGeneratorImpl
+    : public audio_analyser::proto::AudioGenerator::Service {
+public:
+  explicit AudioGeneratorImpl(
+      const juce::AudioProcessorValueTreeState &processor)
+      : enabled(processor.getParameter("gen_enable")),
+        level(processor.getParameter("gen_level")),
+        frequency(processor.getParameter("gen_frequency")) {
+    jassert(enabled != nullptr);
+    jassert(level != nullptr);
+    jassert(frequency != nullptr);
+  }
+
+  grpc::Status
+  SetGeneratorSettings(grpc::ServerContext *,
+                       const audio_analyser::proto::GeneratorSettings *request,
+                       audio_analyser::proto::Void *) override {
+    enabled->setValueNotifyingHost(request->enabled());
+    level->setValueNotifyingHost(level->convertTo0to1(request->peak_level()));
+    frequency->setValueNotifyingHost(frequency->convertTo0to1(request->frequency()));
+
+    return grpc::Status::OK;
+  }
+
+  grpc::Status GetGeneratorSettings(
+      grpc::ServerContext *context, const audio_analyser::proto::Void *,
+      audio_analyser::proto::GeneratorSettings *response) override {
+    response->set_enabled(enabled->getValue() > 0.5f);
+    response->set_peak_level(level->convertFrom0to1(level->getValue()));
+    response->set_frequency(frequency->convertFrom0to1(frequency->getValue()));
+
+    return grpc::Status::OK;
+  }
+
+private:
+  juce::RangedAudioParameter *enabled;
+  juce::RangedAudioParameter *level;
+  juce::RangedAudioParameter *frequency;
+};
+
 void GrpcServerThread::run() {
   auto get_meter_reading = std::function<MeterReading()>{
       [p = &processor] { return p->getMeterReading(); }};
   auto audio_streaming_service =
       AudioStreamingImpl{processor.queue, get_meter_reading};
+
+  auto generator_service = AudioGeneratorImpl{processor.parameters};
 
   // TODO CMake config for port
   std::string server_address{"localhost:8080"};
@@ -222,6 +264,7 @@ void GrpcServerThread::run() {
   builder.RegisterService(&service);
 #endif
   builder.RegisterService(&audio_streaming_service);
+  builder.RegisterService(&generator_service);
   std::unique_ptr<grpc::Server> server{builder.BuildAndStart()};
 
   juce::Logger::outputDebugString(

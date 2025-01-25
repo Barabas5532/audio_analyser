@@ -12,7 +12,18 @@ AudioAnalyserAudioProcessor::AudioAnalyserAudioProcessor()
               .withOutput("Output", juce::AudioChannelSet::stereo(), true)
 #endif
               ),
+      parameters(
+          *this, nullptr, "analyser",
+          {std::make_unique<juce::AudioParameterBool>("gen_enable",
+                                                      "Generator Enable", true),
+           std::make_unique<juce::AudioParameterFloat>(
+               "gen_level", "Generator Level", 0.f, 1.f, 0.5f),
+           std::make_unique<juce::AudioParameterFloat>(
+               "gen_frequency", "Generator Frequency", 1.f, 20000.f, 1000.f)}),
       server_thread(*this), rms_meter{meter_chain.get<0>()} {
+  generator_enabled = parameters.getRawParameterValue("gen_enable");
+  generator_level = parameters.getRawParameterValue("gen_level");
+  generator_frequency = parameters.getRawParameterValue("gen_frequency");
 
   server_thread.startThread();
 
@@ -97,14 +108,20 @@ void AudioAnalyserAudioProcessor::changeProgramName(
 //==============================================================================
 void AudioAnalyserAudioProcessor::prepareToPlay(double sampleRate,
                                                 int samplesPerBlock) {
-  meter_chain.prepare({
+  auto spec = juce::dsp::ProcessSpec{
       .sampleRate{sampleRate},
       .maximumBlockSize{static_cast<juce::uint32>(samplesPerBlock)},
       .numChannels{static_cast<juce::uint32>(getTotalNumInputChannels())},
-  });
+  };
+  
+  meter_chain.prepare(spec);
+  generator.prepare(spec);
 }
 
-void AudioAnalyserAudioProcessor::releaseResources() { meter_chain.reset(); }
+void AudioAnalyserAudioProcessor::releaseResources() {
+  meter_chain.reset();
+  generator.reset();
+}
 
 bool AudioAnalyserAudioProcessor::isBusesLayoutSupported(
     const BusesLayout &layouts) const {
@@ -143,8 +160,14 @@ void AudioAnalyserAudioProcessor::processBlock(juce::AudioBuffer<float> &buffer,
   auto process_context = juce::dsp::ProcessContextReplacing(block);
 
   meter_chain.process(process_context);
-
-  buffer.clear();
+  
+  // Process the generator last as it overwrites the buffer contents with the
+  // generated signal.
+  generator.set_enable(*generator_enabled > 0.5f);
+  generator.set_peak_level(*generator_level);
+  generator.set_frequency(*generator_frequency);
+  
+  generator.process(process_context);
 }
 
 //==============================================================================

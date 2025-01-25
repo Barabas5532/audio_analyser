@@ -1,6 +1,8 @@
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:audio_analyser/generator.dart';
+
 import 'audio/fake_audio_engine.dart';
 import 'meters.dart';
 import 'rate_counter.dart';
@@ -67,7 +69,9 @@ void main(List<String> args) async {
      */
 
     final streamingClient = grpc.AudioStreamingClient(channel);
-    audioEngine = GrpcAudioEngine(client: streamingClient);
+    audioEngine = GrpcAudioEngine(
+        streamingClient: streamingClient,
+        generatorClient: grpc.AudioGeneratorClient(channel));
   } else {
     const bufferSize = 512;
     audioEngine = FakeAudioEngine(rate, bufferSize);
@@ -98,11 +102,22 @@ class MyApp extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Audio Analyser'),
         ),
-        body: Column(
+        body: Row(
           children: [
-            Flexible(child: Oscilloscope(rate: rate, engine: engine)),
-            const Divider(),
-            Flexible(child: Meters(engine: engine)),
+            SizedBox(
+                width: 300,
+                child: GeneratorPanel(
+                  service: engine.generator,
+                )),
+            Flexible(
+              child: Column(
+                children: [
+                  Flexible(child: Oscilloscope(rate: rate, engine: engine)),
+                  const Divider(),
+                  Flexible(child: Meters(engine: engine)),
+                ],
+              ),
+            ),
           ],
         ),
       ),
