@@ -117,7 +117,8 @@ class MyApp extends StatelessWidget {
                   Flexible(
                     child: Row(
                       children: [
-                        Expanded(child: Oscilloscope(rate: rate, engine: engine)),
+                        Expanded(
+                            child: Oscilloscope(rate: rate, engine: engine)),
                         const SizedBox(width: 8),
                         Expanded(
                             child: FftScope(
@@ -520,9 +521,9 @@ extension DoubleLabelFormatEx on double {
   }
 }
 
-extension on Iterable<double> {
+extension MagnitudeEx on Iterable<double> {
   NumberMagnitude maxMagnitude() {
-    final sorted = toList()..sort();
+    final sorted = map((e) => e.abs()).toList()..sort();
     return sorted.last.magnitude;
   }
 }
@@ -544,7 +545,7 @@ Iterable<double> makeTicks(double min, double max, int maxTickCount) sync* {
 
   for (var i = 0; i < maxTickCount; i++) {
     final tick = min + i * interval;
-    if(tick > max) break;
+    if (tick > max) break;
     yield tick;
   }
 }
@@ -569,7 +570,10 @@ enum NumberMagnitude {
   micro,
   nano,
   pico,
-  smaller,
+  smaller;
+
+  bool get isHandled =>
+      this != NumberMagnitude.smaller && this != NumberMagnitude.larger;
 }
 
 String formatTick(double value, NumberMagnitude magnitude) {
@@ -588,8 +592,13 @@ String formatTick(double value, NumberMagnitude magnitude) {
     NumberMagnitude.micro => '${(value * 1e6).toLabelFormat()}u',
     NumberMagnitude.nano => '${(value * 1e9).toLabelFormat()}n',
     NumberMagnitude.pico => '${(value * 1e12).toLabelFormat()}p',
-    _ => fallback(value),
+    NumberMagnitude.larger || NumberMagnitude.smaller => fallback(value),
   };
+
+  if (magnitude.isHandled) {
+    assert(!number.contains('e'),
+        "Handled number magnitudes must not be formatted using exponential format");
+  }
 
   return switch (sign) {
     -1.0 => '-$number',

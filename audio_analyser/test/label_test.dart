@@ -44,4 +44,9 @@ void main() {
     expect(resultNegative,
         reference.map((key, value) => MapEntry(key, '-$value')));
   });
+
+  test('max magnitude', () {
+    final ticks = [-1.2, -0.7, -0.2, 0.3, 0.8];
+    expect(ticks.maxMagnitude(), NumberMagnitude.base);
+  });
 }
