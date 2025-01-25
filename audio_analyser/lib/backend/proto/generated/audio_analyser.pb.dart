@@ -166,13 +166,97 @@ class AudioBuffer extends $pb.GeneratedMessage {
   $core.List<$core.double> get samples => $_getList(0);
 }
 
+/// A state to be displayed on the FFT meter.
+class MeterReading_FftReading extends $pb.GeneratedMessage {
+  factory MeterReading_FftReading({
+    $core.double? sampleRate,
+    $core.Iterable<$core.double>? magnitudes,
+  }) {
+    final $result = create();
+    if (sampleRate != null) {
+      $result.sampleRate = sampleRate;
+    }
+    if (magnitudes != null) {
+      $result.magnitudes.addAll(magnitudes);
+    }
+    return $result;
+  }
+  MeterReading_FftReading._() : super();
+  factory MeterReading_FftReading.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory MeterReading_FftReading.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'MeterReading.FftReading',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'audio_analyser.proto'),
+      createEmptyInstance: create)
+    ..a<$core.double>(
+        1, _omitFieldNames ? '' : 'sampleRate', $pb.PbFieldType.OF)
+    ..p<$core.double>(
+        2, _omitFieldNames ? '' : 'magnitudes', $pb.PbFieldType.KF)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
+  MeterReading_FftReading clone() =>
+      MeterReading_FftReading()..mergeFromMessage(this);
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  MeterReading_FftReading copyWith(
+          void Function(MeterReading_FftReading) updates) =>
+      super.copyWith((message) => updates(message as MeterReading_FftReading))
+          as MeterReading_FftReading;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static MeterReading_FftReading create() => MeterReading_FftReading._();
+  MeterReading_FftReading createEmptyInstance() => create();
+  static $pb.PbList<MeterReading_FftReading> createRepeated() =>
+      $pb.PbList<MeterReading_FftReading>();
+  @$core.pragma('dart2js:noInline')
+  static MeterReading_FftReading getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<MeterReading_FftReading>(create);
+  static MeterReading_FftReading? _defaultInstance;
+
+  /// The current sample rate used to obtain this reading.
+  @$pb.TagNumber(1)
+  $core.double get sampleRate => $_getN(0);
+  @$pb.TagNumber(1)
+  set sampleRate($core.double v) {
+    $_setFloat(0, v);
+  }
+
+  @$pb.TagNumber(1)
+  $core.bool hasSampleRate() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearSampleRate() => clearField(1);
+
+  /// The magnitude in linear units of the signal in each bin. The range is
+  /// (-1, 1).
+  ///
+  /// The first entry corresponds to DC, and the last entry to sample_rate / 2.
+  @$pb.TagNumber(2)
+  $core.List<$core.double> get magnitudes => $_getList(1);
+}
+
 class MeterReading extends $pb.GeneratedMessage {
   factory MeterReading({
     $core.double? rms,
+    MeterReading_FftReading? fft,
   }) {
     final $result = create();
     if (rms != null) {
       $result.rms = rms;
+    }
+    if (fft != null) {
+      $result.fft = fft;
     }
     return $result;
   }
@@ -190,6 +274,8 @@ class MeterReading extends $pb.GeneratedMessage {
           _omitMessageNames ? '' : 'audio_analyser.proto'),
       createEmptyInstance: create)
     ..a<$core.double>(1, _omitFieldNames ? '' : 'rms', $pb.PbFieldType.OF)
+    ..aOM<MeterReading_FftReading>(2, _omitFieldNames ? '' : 'fft',
+        subBuilder: MeterReading_FftReading.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('Using this can add significant overhead to your binary. '
@@ -226,6 +312,20 @@ class MeterReading extends $pb.GeneratedMessage {
   $core.bool hasRms() => $_has(0);
   @$pb.TagNumber(1)
   void clearRms() => clearField(1);
+
+  @$pb.TagNumber(2)
+  MeterReading_FftReading get fft => $_getN(1);
+  @$pb.TagNumber(2)
+  set fft(MeterReading_FftReading v) {
+    setField(2, v);
+  }
+
+  @$pb.TagNumber(2)
+  $core.bool hasFft() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearFft() => clearField(2);
+  @$pb.TagNumber(2)
+  MeterReading_FftReading ensureFft() => $_ensure(1);
 }
 
 class GeneratorSettings extends $pb.GeneratedMessage {

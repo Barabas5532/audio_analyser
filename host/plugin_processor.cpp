@@ -20,7 +20,8 @@ AudioAnalyserAudioProcessor::AudioAnalyserAudioProcessor()
                "gen_level", "Generator Level", 0.f, 1.f, 0.5f),
            std::make_unique<juce::AudioParameterFloat>(
                "gen_frequency", "Generator Frequency", 1.f, 20000.f, 1000.f)}),
-      server_thread(*this), rms_meter{meter_chain.get<0>()} {
+      server_thread(*this), rms_meter{meter_chain.get<0>()},
+      fft_meter{meter_chain.get<1>()} {
   generator_enabled = parameters.getRawParameterValue("gen_enable");
   generator_level = parameters.getRawParameterValue("gen_level");
   generator_frequency = parameters.getRawParameterValue("gen_frequency");
@@ -197,7 +198,8 @@ void AudioAnalyserAudioProcessor::setStateInformation(const void *data,
 }
 
 MeterReading AudioAnalyserAudioProcessor::getMeterReading() {
-  return MeterReading{.rms{rms_meter.get_reading()}};
+  return MeterReading{.rms{rms_meter.get_reading()},
+                      .fft{fft_meter.get_reading()}};
 }
 
 //==============================================================================

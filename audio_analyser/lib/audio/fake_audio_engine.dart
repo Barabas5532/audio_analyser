@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as m;
 
+import 'package:audio_analyser/audio/fft_state.dart';
 import 'package:audio_analyser/audio/meters_state.dart';
 import 'package:audio_analyser/backend/generator.dart';
 import 'package:audio_analyser/backend/generator_settings.dart';
@@ -39,13 +40,23 @@ class FakeAudioEngine extends AudioEngine {
     timer.cancel();
   }
 
+  late final _random = m.Random();
+
   @override
   Stream<AudioBuffer> get audio => audioController.stream;
 
   @override
   Stream<MetersState> get meters => Stream.periodic(
         const Duration(seconds: 1),
-        (_) => MetersState(rms: m.Random().nextDouble()),
+        (_) => MetersState(
+            rms: m.Random().nextDouble(),
+            fft: FftState(
+              frequencies: List.generate(
+                128,
+                (i) => (sampleRate / 2) * i / 128.0,
+              ),
+              magnitude: List.generate(128, (_) => _random.nextDouble()),
+            )),
       );
 
   @override

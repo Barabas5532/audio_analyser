@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:audio_analyser/audio/fft_state.dart';
 import 'package:audio_analyser/generator.dart';
 
 import 'audio/fake_audio_engine.dart';
@@ -105,14 +106,28 @@ class MyApp extends StatelessWidget {
         body: Row(
           children: [
             SizedBox(
-                width: 300,
-                child: GeneratorPanel(
-                  service: engine.generator,
-                )),
+              width: 300,
+              child: GeneratorPanel(
+                service: engine.generator,
+              ),
+            ),
             Flexible(
               child: Column(
                 children: [
-                  Flexible(child: Oscilloscope(rate: rate, engine: engine)),
+                  Flexible(
+                    child: Row(
+                      children: [
+                        Expanded(
+                            child: Oscilloscope(rate: rate, engine: engine)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                            child: FftScope(
+                                state: engine.meters.map(
+                          (e) => e.fft,
+                        ))),
+                      ],
+                    ),
+                  ),
                   const Divider(),
                   Flexible(child: Meters(engine: engine)),
                 ],
@@ -324,6 +339,164 @@ class _OscilloscopeState extends State<Oscilloscope> {
   double get triggerRatio => xAxis.minimum.abs() / xAxis.range;
 }
 
+class FftScope extends StatefulWidget {
+  const FftScope({super.key, required this.state});
+
+  final Stream<FftState> state;
+
+  @override
+  State<FftScope> createState() => _FftScopeState();
+}
+
+class _FftScopeState extends State<FftScope> {
+  final rateCounter = RateCounter();
+
+  var xPoints = <double>[];
+  var yPoints = <double>[];
+
+  @override
+  void initState() {
+    super.initState();
+
+    widget.state.listen(_stateChanged);
+
+    rateCounter.rateStream.listen(
+      (rate) => _log.info('FFT block rate: $rate Hz'),
+    );
+  }
+
+  AxisParameters _xAxis = AxisParameters(
+    label: "Frequency (Hz)",
+    minimum: 0,
+    maximum: 24e3,
+    ticks: () {
+      final ticks = makeTicks(0, 24e3, 6);
+      return ticks.map((e) => TickLabel(
+          value: e.toDouble(), label: formatTick(e, ticks.maxMagnitude())));
+    }(),
+  );
+
+  AxisParameters _yAxis = AxisParameters(
+    label: "Magnitude (dB)",
+    minimum: -100,
+    maximum: 6,
+    ticks: () {
+      final ticks = makeTicks(-100, 6, 6);
+      return ticks.map((e) => TickLabel(
+          value: e.toDouble(), label: formatTick(e, ticks.maxMagnitude())));
+    }(),
+  );
+
+  set xAxis(AxisParameters value) {
+    final ticks = makeTicks(value.minimum, value.maximum, 6);
+    _xAxis = value.copyWith(
+        ticks: ticks.map((e) => TickLabel(
+            value: e.toDouble(), label: formatTick(e, ticks.maxMagnitude()))));
+  }
+
+  AxisParameters get xAxis => _xAxis;
+
+  set yAxis(AxisParameters value) {
+    final ticks = makeTicks(value.minimum, value.maximum, 6);
+    _yAxis = value.copyWith(
+        ticks: ticks.map((e) => TickLabel(
+            value: e.toDouble(), label: formatTick(e, ticks.maxMagnitude()))));
+  }
+
+  AxisParameters get yAxis => _yAxis;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) => AudioPlot(
+        width: constraints.maxWidth,
+        height: constraints.maxHeight,
+        xAxisSize: _kXAxisSize,
+        yAxisSize: _kYAxisSize,
+        xPoints: xPoints,
+        yPoints: yPoints,
+        translateXAxis: translateXAxis,
+        translateYAxis: translateYAxis,
+        zoomXAxis: zoomXAxis,
+        zoomYAxis: zoomYAxis,
+        xAxis: xAxis,
+        yAxis: yAxis,
+      ),
+    );
+  }
+
+  void translateYAxis(double dy) {
+    setState(() {
+      yAxis = yAxis.copyWith(
+          minimum: yAxis.minimum + dy, maximum: yAxis.maximum + dy);
+    });
+  }
+
+  void translateXAxis(double dx) {
+    // do not allow moving the trigger point out of the screen
+    if (xAxis.minimum - dx > 0) {
+      dx = xAxis.minimum;
+    }
+
+    if (xAxis.maximum - dx < 0) {
+      dx = xAxis.maximum;
+    }
+
+    setState(() {
+      xAxis = xAxis.copyWith(
+          minimum: xAxis.minimum - dx, maximum: xAxis.maximum - dx);
+    });
+  }
+
+  void zoomYAxis(delta, r) {
+    final factor = m.log(delta.abs()) / 3;
+    final ratio = delta < 0 ? factor : 1 / factor;
+
+    final a = yAxis.maximum;
+    final b = yAxis.minimum;
+
+    {
+      final f = a + (b - a) * r;
+      final aPrime = f - r * (b - a) / ratio;
+      final bPrime = aPrime + (b - a) / ratio;
+      setState(() {
+        yAxis = yAxis.copyWith(minimum: bPrime, maximum: aPrime);
+      });
+    }
+  }
+
+  void zoomXAxis(double delta, double r) {
+    final factor = m.log(delta.abs()) / 3;
+    final ratio = delta < 0 ? factor : 1 / factor;
+
+    var a = xAxis.minimum;
+    var b = xAxis.maximum;
+    {
+      final f = a + (b - a) * r;
+      final aPrime = f - r * (b - a) / ratio;
+      final bPrime = aPrime + (b - a) / ratio;
+      setState(() {
+        xAxis = xAxis.copyWith(minimum: aPrime, maximum: bPrime);
+      });
+    }
+  }
+
+  void _stateChanged(FftState fft) {
+    rateCounter.tick();
+
+    setState(() {
+      xPoints = fft.frequencies;
+      yPoints = fft.magnitude
+          .map(
+            (e) => 20 * _log10(e),
+          )
+          // FIXME deal with infinity better elsewhere
+          .map((e) => e < -144.0 ? -144.0 : e)
+          .toList();
+    });
+  }
+}
+
 extension DoubleMagnitudeEx on double {
   NumberMagnitude get magnitude => switch (abs()) {
         final a when a >= 1e9 => NumberMagnitude.larger,
@@ -348,9 +521,9 @@ extension DoubleLabelFormatEx on double {
   }
 }
 
-extension on Iterable<double> {
+extension MagnitudeEx on Iterable<double> {
   NumberMagnitude maxMagnitude() {
-    final sorted = toList()..sort();
+    final sorted = map((e) => e.abs()).toList()..sort();
     return sorted.last.magnitude;
   }
 }
@@ -371,7 +544,9 @@ Iterable<double> makeTicks(double min, double max, int maxTickCount) sync* {
   interval = sig * exp;
 
   for (var i = 0; i < maxTickCount; i++) {
-    yield min + i * interval;
+    final tick = min + i * interval;
+    if (tick > max) break;
+    yield tick;
   }
 }
 
@@ -395,7 +570,10 @@ enum NumberMagnitude {
   micro,
   nano,
   pico,
-  smaller,
+  smaller;
+
+  bool get isHandled =>
+      this != NumberMagnitude.smaller && this != NumberMagnitude.larger;
 }
 
 String formatTick(double value, NumberMagnitude magnitude) {
@@ -414,11 +592,18 @@ String formatTick(double value, NumberMagnitude magnitude) {
     NumberMagnitude.micro => '${(value * 1e6).toLabelFormat()}u',
     NumberMagnitude.nano => '${(value * 1e9).toLabelFormat()}n',
     NumberMagnitude.pico => '${(value * 1e12).toLabelFormat()}p',
-    _ => fallback(value),
+    NumberMagnitude.larger || NumberMagnitude.smaller => fallback(value),
   };
+
+  if (magnitude.isHandled) {
+    assert(!number.contains('e'),
+        "Handled number magnitudes must not be formatted using exponential format");
+  }
 
   return switch (sign) {
     -1.0 => '-$number',
     _ => number,
   };
 }
+
+double _log10(double n) => m.log(n) / m.ln10;

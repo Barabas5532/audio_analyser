@@ -5,6 +5,8 @@ import 'package:audio_analyser/backend/generator.dart';
 import 'package:audio_analyser/backend/proto/generated/audio_analyser.pbgrpc.dart'
     as grpc;
 
+import 'fft_state.dart';
+
 typedef AudioBuffer = List<double>;
 
 abstract class AudioEngine {
@@ -29,9 +31,20 @@ class GrpcAudioEngine implements AudioEngine {
       streamingClient.getAudioStream(grpc.Void()).map((event) => event.samples);
 
   @override
-  Stream<MetersState> get meters => streamingClient
+  late final Stream<MetersState> meters = streamingClient
       .getMeterStream(grpc.Void())
-      .map((event) => MetersState(rms: event.rms));
+      .asBroadcastStream()
+      .map((event) => MetersState(
+          rms: event.rms,
+          fft: FftState(
+              frequencies: List<double>.generate(
+                event.fft.magnitudes.length,
+                (i) =>
+                    (event.fft.sampleRate / 2) *
+                    i /
+                    (event.fft.magnitudes.length - 1),
+              ),
+              magnitude: event.fft.magnitudes)));
 
   @override
   void dispose() {}

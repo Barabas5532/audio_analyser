@@ -155,6 +155,13 @@ public:
             auto meter_reading = get_meter_reading();
             auto message = audio_analyser::proto::MeterReading();
             message.set_rms(meter_reading.rms);
+            auto fft = message.mutable_fft();
+            fft->set_sample_rate(meter_reading.fft.sample_rate);
+            for(const auto &m : meter_reading.fft.magnitudes)
+            {
+              fft->add_magnitudes(m);
+            }
+            
             float sample;
             this->StartWrite(&message);
           };

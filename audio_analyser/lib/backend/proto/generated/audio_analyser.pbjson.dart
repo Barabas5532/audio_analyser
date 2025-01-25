@@ -50,12 +50,33 @@ const MeterReading$json = {
   '1': 'MeterReading',
   '2': [
     {'1': 'rms', '3': 1, '4': 1, '5': 2, '10': 'rms'},
+    {
+      '1': 'fft',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.audio_analyser.proto.MeterReading.FftReading',
+      '10': 'fft'
+    },
+  ],
+  '3': [MeterReading_FftReading$json],
+};
+
+@$core.Deprecated('Use meterReadingDescriptor instead')
+const MeterReading_FftReading$json = {
+  '1': 'FftReading',
+  '2': [
+    {'1': 'sample_rate', '3': 1, '4': 1, '5': 2, '10': 'sampleRate'},
+    {'1': 'magnitudes', '3': 2, '4': 3, '5': 2, '10': 'magnitudes'},
   ],
 };
 
 /// Descriptor for `MeterReading`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List meterReadingDescriptor =
-    $convert.base64Decode('CgxNZXRlclJlYWRpbmcSEAoDcm1zGAEgASgCUgNybXM=');
+final $typed_data.Uint8List meterReadingDescriptor = $convert.base64Decode(
+    'CgxNZXRlclJlYWRpbmcSEAoDcm1zGAEgASgCUgNybXMSPwoDZmZ0GAIgASgLMi0uYXVkaW9fYW'
+    '5hbHlzZXIucHJvdG8uTWV0ZXJSZWFkaW5nLkZmdFJlYWRpbmdSA2ZmdBpNCgpGZnRSZWFkaW5n'
+    'Eh8KC3NhbXBsZV9yYXRlGAEgASgCUgpzYW1wbGVSYXRlEh4KCm1hZ25pdHVkZXMYAiADKAJSCm'
+    '1hZ25pdHVkZXM=');
 
 @$core.Deprecated('Use generatorSettingsDescriptor instead')
 const GeneratorSettings$json = {

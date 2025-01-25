@@ -2,7 +2,7 @@
 
 #include "meter.h"
 
-class RmsMeter : public MeterBase {
+class RmsMeter : public Meter<float> {
 public:
   [[nodiscard]] float get_reading() const override;
   void prepare(const juce::dsp::ProcessSpec &spec) override;
