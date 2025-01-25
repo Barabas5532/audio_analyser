@@ -29,11 +29,17 @@ class __GeneratorPanelState extends State<_GeneratorPanel> {
   final frequencyController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
     final s = context.read<GeneratorService>();
     print('dependency changed ${s.settings}');
+
     levelController.text = s.settings?.level.toString() ?? '';
     frequencyController.text = s.settings?.frequency.toString() ?? '';
   }
@@ -54,15 +60,67 @@ class __GeneratorPanelState extends State<_GeneratorPanel> {
                   .read<GeneratorService>()
                   .setGeneratorSettings(settings.copyWith(enabled: v)),
         ),
+        ParameterTextField(controller: levelController, decoration: InputDecoration(label: Text('Level'), suffix: Text('V')), onSaved: settings == null
+            ? null
+            : (v) => context
+            .read<GeneratorService>()
+            .setGeneratorSettings(settings.copyWith(level: v)),),
         TextField(
-            controller: levelController,
-            decoration:
-                const InputDecoration(label: Text('Level'), suffix: Text('V'))),
-        TextField(
-            controller: frequencyController,
-            decoration:
-                const InputDecoration(label: Text('Frequency'), suffix: Text('Hz'))),
+          controller: frequencyController,
+          decoration: const InputDecoration(
+              label: Text('Frequency'), suffix: Text('Hz')),
+        ),
       ],
+    );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    levelController.dispose();
+    frequencyController.dispose();
+  }
+}
+
+class ParameterTextField extends StatefulWidget {
+  const ParameterTextField({
+    super.key,
+    required this.controller,
+    required this.onSaved,
+    this.decoration,
+  });
+
+  final TextEditingController controller;
+  final void Function(double)? onSaved;
+  final InputDecoration? decoration;
+
+  @override
+  State<ParameterTextField> createState() => _ParameterTextFieldState();
+}
+
+class _ParameterTextFieldState extends State<ParameterTextField> {
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: _formKey,
+      child: TextFormField(
+        controller: widget.controller,
+        decoration: widget.decoration,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        validator: (v) {
+          if (v == null || v.isEmpty) return "Must not be empty";
+
+          if (double.tryParse(v) case final _?) return null;
+
+          return "Must be a number";
+        },
+        onFieldSubmitted: (_) => _formKey.currentState!.save(),
+        onSaved: (v) => widget.onSaved?.call(double.parse(v!)),
+        enabled: widget.onSaved != null,
+      ),
     );
   }
 }
