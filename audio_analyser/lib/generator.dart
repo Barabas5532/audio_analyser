@@ -60,16 +60,25 @@ class __GeneratorPanelState extends State<_GeneratorPanel> {
                   .read<GeneratorService>()
                   .setGeneratorSettings(settings.copyWith(enabled: v)),
         ),
-        ParameterTextField(controller: levelController, decoration: InputDecoration(label: Text('Level'), suffix: Text('V')), onSaved: settings == null
-            ? null
-            : (v) => context
-            .read<GeneratorService>()
-            .setGeneratorSettings(settings.copyWith(level: v)),),
-        TextField(
-          controller: frequencyController,
-          decoration: const InputDecoration(
-              label: Text('Frequency'), suffix: Text('Hz')),
+        ParameterTextField(
+          controller: levelController,
+          decoration: InputDecoration(label: Text('Level'), suffix: Text('V')),
+          onSaved: settings == null
+              ? null
+              : (v) => context
+                  .read<GeneratorService>()
+                  .setGeneratorSettings(settings.copyWith(level: v)),
         ),
+        ParameterTextField(
+          controller: frequencyController,
+          decoration:
+              InputDecoration(label: Text('Frequency'), suffix: Text('Hz')),
+          onSaved: settings == null
+              ? null
+              : (v) => context
+                  .read<GeneratorService>()
+                  .setGeneratorSettings(settings.copyWith(frequency: v)),
+        )
       ],
     );
   }
