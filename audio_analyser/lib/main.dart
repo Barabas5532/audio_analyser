@@ -69,7 +69,9 @@ void main(List<String> args) async {
      */
 
     final streamingClient = grpc.AudioStreamingClient(channel);
-    audioEngine = GrpcAudioEngine(streamingClient: streamingClient, generatorClient: grpc.AudioGeneratorClient(channel));
+    audioEngine = GrpcAudioEngine(
+        streamingClient: streamingClient,
+        generatorClient: grpc.AudioGeneratorClient(channel));
   } else {
     const bufferSize = 512;
     audioEngine = FakeAudioEngine(rate, bufferSize);
@@ -102,7 +104,11 @@ class MyApp extends StatelessWidget {
         ),
         body: Row(
           children: [
-            SizedBox(width: 300, child: GeneratorPanel(service: engine.generator,)),
+            SizedBox(
+                width: 300,
+                child: GeneratorPanel(
+                  service: engine.generator,
+                )),
             Flexible(
               child: Column(
                 children: [

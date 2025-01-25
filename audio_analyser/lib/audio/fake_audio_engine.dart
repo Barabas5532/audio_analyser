@@ -56,7 +56,8 @@ class _FakeGenerator extends ChangeNotifier implements GeneratorService {
   _FakeGenerator({required this.generator});
 
   @override
-  GeneratorSettings? settings = GeneratorSettings(enabled: true, level: 1, frequency: 1000);
+  GeneratorSettings? settings =
+      GeneratorSettings(enabled: true, level: 1, frequency: 1000);
   _SineGenerator generator;
 
   @override
@@ -67,8 +68,7 @@ class _FakeGenerator extends ChangeNotifier implements GeneratorService {
 }
 
 class _SineGenerator {
-  _SineGenerator(this.sampleRate, double frequency)
-  {
+  _SineGenerator(this.sampleRate, double frequency) {
     this.frequency = frequency;
   }
 
