@@ -23,6 +23,7 @@ target_sources(AudioAnalyser
         plugin_editor.cpp
         meters/rms_meter.cpp
         meters/fft_meter.cpp
+        generator/generator.cpp
         plugin_processor.cpp
         grpc_server_thread.cpp
         )

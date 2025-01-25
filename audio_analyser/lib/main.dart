@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:audio_analyser/audio/fft_state.dart';
+import 'package:audio_analyser/generator.dart';
 
 import 'audio/fake_audio_engine.dart';
 import 'meters.dart';
@@ -69,7 +70,9 @@ void main(List<String> args) async {
      */
 
     final streamingClient = grpc.AudioStreamingClient(channel);
-    audioEngine = GrpcAudioEngine(client: streamingClient);
+    audioEngine = GrpcAudioEngine(
+        streamingClient: streamingClient,
+        generatorClient: grpc.AudioGeneratorClient(channel));
   } else {
     const bufferSize = 512;
     audioEngine = FakeAudioEngine(rate, bufferSize);
@@ -100,23 +103,35 @@ class MyApp extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Audio Analyser'),
         ),
-        body: Column(
+        body: Row(
           children: [
+            SizedBox(
+              width: 300,
+              child: GeneratorPanel(
+                service: engine.generator,
+              ),
+            ),
             Flexible(
-              child: Row(
+              child: Column(
                 children: [
-                  Expanded(child: Oscilloscope(rate: rate, engine: engine)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                      child: FftScope(
-                          state: engine.meters.map(
-                    (e) => e.fft,
-                  ))),
+                  Flexible(
+                    child: Row(
+                      children: [
+                        Expanded(child: Oscilloscope(rate: rate, engine: engine)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                            child: FftScope(
+                                state: engine.meters.map(
+                          (e) => e.fft,
+                        ))),
+                      ],
+                    ),
+                  ),
+                  const Divider(),
+                  Flexible(child: Meters(engine: engine)),
                 ],
               ),
             ),
-            const Divider(),
-            Flexible(child: Meters(engine: engine)),
           ],
         ),
       ),

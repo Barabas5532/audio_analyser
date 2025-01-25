@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audio_analyser/audio/meters_state.dart';
+import 'package:audio_analyser/backend/generator.dart';
 import 'package:audio_analyser/backend/proto/generated/audio_analyser.pbgrpc.dart'
     as grpc;
 
@@ -13,20 +14,24 @@ abstract class AudioEngine {
 
   Stream<MetersState> get meters;
 
+  GeneratorService get generator;
+
   void dispose();
 }
 
 class GrpcAudioEngine implements AudioEngine {
-  GrpcAudioEngine({required this.client});
+  GrpcAudioEngine(
+      {required this.streamingClient, required this.generatorClient});
 
-  final grpc.AudioStreamingClient client;
+  final grpc.AudioStreamingClient streamingClient;
+  final grpc.AudioGeneratorClient generatorClient;
 
   @override
   Stream<AudioBuffer> get audio =>
-      client.getAudioStream(grpc.Void()).map((event) => event.samples);
+      streamingClient.getAudioStream(grpc.Void()).map((event) => event.samples);
 
   @override
-  late final Stream<MetersState> meters = client
+  late final Stream<MetersState> meters = streamingClient
       .getMeterStream(grpc.Void())
       .asBroadcastStream()
       .map((event) => MetersState(
@@ -43,4 +48,7 @@ class GrpcAudioEngine implements AudioEngine {
 
   @override
   void dispose() {}
+
+  @override
+  late GeneratorService generator = GeneratorService(client: generatorClient);
 }

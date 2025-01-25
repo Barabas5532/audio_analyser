@@ -43,3 +43,16 @@ message MeterReading {
    */
 }
 
+service AudioGenerator {
+  rpc GetGeneratorSettings(Void) returns (GeneratorSettings) {}
+  rpc SetGeneratorSettings(GeneratorSettings) returns (Void) {}
+}
+
+message GeneratorSettings {
+    /* Output level in peak level full scale. 0 is silence, 1 is full scale.  */
+    float peak_level = 1;
+    /* Output frequency in Hz. */
+    float frequency = 2;
+    /* When true, audio output is active, otherwise the output is silence */
+    bool enabled = 3;
+}

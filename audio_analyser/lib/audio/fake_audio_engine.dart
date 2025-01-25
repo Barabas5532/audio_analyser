@@ -3,6 +3,9 @@ import 'dart:math' as m;
 
 import 'package:audio_analyser/audio/fft_state.dart';
 import 'package:audio_analyser/audio/meters_state.dart';
+import 'package:audio_analyser/backend/generator.dart';
+import 'package:audio_analyser/backend/generator_settings.dart';
+import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 
 import 'audio_engine.dart';
@@ -23,12 +26,12 @@ class FakeAudioEngine extends AudioEngine {
 
   late final Timer timer;
 
-  late final generator = _SineGenerator(sampleRate, 1000);
+  late final sineGenerator = _SineGenerator(sampleRate, 1000);
 
   final audioController = StreamController<AudioBuffer>();
 
   void _generateBuffer() {
-    final buffer = generator.generate(bufferSize);
+    final buffer = sineGenerator.generate(bufferSize);
     audioController.add(buffer);
   }
 
@@ -55,14 +58,34 @@ class FakeAudioEngine extends AudioEngine {
               magnitude: List.generate(128, (_) => _random.nextDouble()),
             )),
       );
+
+  @override
+  late GeneratorService generator = _FakeGenerator(generator: sineGenerator);
+}
+
+class _FakeGenerator extends ChangeNotifier implements GeneratorService {
+  _FakeGenerator({required this.generator});
+
+  @override
+  GeneratorSettings? settings =
+      GeneratorSettings(enabled: true, level: 1, frequency: 1000);
+  _SineGenerator generator;
+
+  @override
+  Future<void> setGeneratorSettings(GeneratorSettings settings) async {
+    this.settings = settings;
+    notifyListeners();
+  }
 }
 
 class _SineGenerator {
-  _SineGenerator(double sampleRate, double frequency)
-      : increment = 2 * m.pi * frequency / sampleRate;
+  _SineGenerator(this.sampleRate, double frequency) {
+    this.frequency = frequency;
+  }
 
+  double sampleRate;
   double phase = 0;
-  double increment;
+  late double increment;
 
   AudioBuffer generate(int count) {
     final buffer = <double>[];
@@ -78,5 +101,9 @@ class _SineGenerator {
     }
 
     return buffer;
+  }
+
+  set frequency(double frequency) {
+    increment = increment = 2 * m.pi * frequency / sampleRate;
   }
 }
