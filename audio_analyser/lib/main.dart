@@ -543,7 +543,9 @@ Iterable<double> makeTicks(double min, double max, int maxTickCount) sync* {
   interval = sig * exp;
 
   for (var i = 0; i < maxTickCount; i++) {
-    yield min + i * interval;
+    final tick = min + i * interval;
+    if(tick > max) break;
+    yield tick;
   }
 }
 
