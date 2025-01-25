@@ -18,7 +18,7 @@ class GeneratorPanel extends StatelessWidget {
 }
 
 class _GeneratorPanel extends StatefulWidget {
-  const _GeneratorPanel({super.key});
+  const _GeneratorPanel();
 
   @override
   State<_GeneratorPanel> createState() => __GeneratorPanelState();
@@ -38,8 +38,6 @@ class __GeneratorPanelState extends State<_GeneratorPanel> {
     super.didChangeDependencies();
 
     final s = context.read<GeneratorService>();
-    print('dependency changed ${s.settings}');
-
     levelController.text = s.settings?.level.toString() ?? '';
     frequencyController.text = s.settings?.frequency.toString() ?? '';
   }
@@ -62,7 +60,8 @@ class __GeneratorPanelState extends State<_GeneratorPanel> {
         ),
         ParameterTextField(
           controller: levelController,
-          decoration: InputDecoration(label: Text('Level'), suffix: Text('V')),
+          decoration:
+              const InputDecoration(label: Text('Level'), suffix: Text('V')),
           onSaved: settings == null
               ? null
               : (v) => context
@@ -71,8 +70,8 @@ class __GeneratorPanelState extends State<_GeneratorPanel> {
         ),
         ParameterTextField(
           controller: frequencyController,
-          decoration:
-              InputDecoration(label: Text('Frequency'), suffix: Text('Hz')),
+          decoration: const InputDecoration(
+              label: Text('Frequency'), suffix: Text('Hz')),
           onSaved: settings == null
               ? null
               : (v) => context
